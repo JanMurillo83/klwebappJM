@@ -29,7 +29,7 @@
                 <!--<a href="{{ route('business-directory.edit', $entry->id) }}" class="text-gray-600 hover:text-blue-500">
                     <i class="fas fa-pen text-md"></i>
                 </a>-->
-                <a href="{{ route('business-directory.create2',['action'=>'edit','id'=>$entry->id]) }}" class="text-gray-600 hover:text-blue-500">
+                <a href="{{ route('business-directory.create2',['action'=>'edit','id'=>$entry->id,'type'=>$entry->type]) }}" class="text-gray-600 hover:text-blue-500">
                     <i class="fas fa-pen text-md"></i>
                 </a>
                 <!-- Botón de correo -->

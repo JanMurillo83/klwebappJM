@@ -7,15 +7,15 @@
 
     <div class="mt-6 ms-8 me-12">
         <div class="flex items-center space-x-2">
-            <a href="{{ route('business-directory.create', ['type' => 'customer']) }}" class="inline-block">
+            <a href="{{ route('business-directory.create2', ['action'=>'create','id'=>0,'type' => 'customer']) }}" class="inline-block">
                 <x-button>Add Customer</x-button>
             </a>
 
-            <a href="{{ route('business-directory.create', ['type' => 'station']) }}" class="inline-block">
+            <a href="{{ route('business-directory.create2', ['action'=>'create','id'=>0,'type' => 'station']) }}" class="inline-block">
                 <x-button>Add New Station</x-button>
             </a>
 
-            <a href="{{ route('business-directory.create2',['action'=>'create','id'=>0]) }}" class="inline-block">
+            <a href="{{ route('business-directory.create2',['action'=>'create','id'=>0,'type'=>'supplier']) }}" class="inline-block">
                 <x-button>Add Supplier</x-button>
             </a>
             @if (session('success'))

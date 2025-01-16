@@ -30,6 +30,7 @@ use Filament\Forms\Components\Toggle;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Form;
+use Filament\Forms\Get;
 use Filament\Notifications\Notification;
 use Filament\Support\Colors\Color;
 use Filament\Support\Enums\ActionSize;
@@ -55,10 +56,13 @@ class CreateBusinessDirectory extends Component implements HasForms
         $this->fillForm();
         $req = request();
         $params = $req->query();
-
-        if($params['action'] == 'create') $this->title = 'Add New Supplier';
+        $typ = $params['type'];
+        if($typ == 'supplier') $typ = 'Supplier';
+        if($typ == 'customer') $typ = 'Customer';
+        if($typ == 'station') $typ = 'Station';
+        if($params['action'] == 'create') $this->title = 'Add New '.$typ;
         else {
-            $this->title = 'Edit Supplier - '.BusinessDirectory::where('id',$params['id'])->get()[0]->company;
+            $this->title = 'Edit '.$typ.' - '.BusinessDirectory::where('id',$params['id'])->get()[0]->company;
         }
     }
     public function fillForm(): void
@@ -67,6 +71,7 @@ class CreateBusinessDirectory extends Component implements HasForms
         $params = $req->query();
         $tip = 'create';
         $s_id = 0;
+        $type = $params['type'];
         if($params['action'] == 'create')
         {
             $bm = new BusinessDirectory;
@@ -79,10 +84,10 @@ class CreateBusinessDirectory extends Component implements HasForms
             $s_id = $params['id'];
         }
         //$data = [];
-        $data = $this->mutateFormDataBeforeFill($data,$tip,$s_id);
+        $data = $this->mutateFormDataBeforeFill($data,$tip,$s_id,$type);
         $this->form->fill($data);
     }
-    public function mutateFormDataBeforeFill(array $data,$tip,$s_id): array
+    public function mutateFormDataBeforeFill(array $data,$tip,$s_id,$type): array
     {
         // STORE TEAMS
         $serv = ServiceDetail::all()->toArray();
@@ -96,38 +101,49 @@ class CreateBusinessDirectory extends Component implements HasForms
             'email'=>null,
             'working_hours'=>null,
             'notes'=>null]);
-            $equip = [];
-            array_push($equip,['equipment'=>null, 'description'=>null]);
+            if($type == 'supplier')
+            {
+                $equip = [];
+                array_push($equip,['equipment'=>null, 'description'=>null]);
+            }
             $data['action'] = 'create';
         }
         else
         {
-            $sup = Supplier::where('directory_entry_id',$s_id)->get()[0];
+
             $conct = Contact::where('directory_entry_id',$s_id)->get()->toArray();
-            $equip = SupplierEquipment::where('supplier_id',$sup->id)->get()->toArray();
-            $data['MC Number'] = $sup->mc_number;
-            $data['USDOT']= $sup->usdot;
-            $data['SCAC']= $sup->scac;
-            $data['CAAT']= $sup->caat;
-            $servicess = ServiceSupplier::where('supplier_id',$sup->id)->get();
-            foreach($servicess as $servs)
+            if($type == 'supplier')
             {
-                $iv = 0;
-                foreach($serv as $sser)
+                $sup = Supplier::where('directory_entry_id',$s_id)->get()[0];
+                $equip = SupplierEquipment::where('supplier_id',$sup->id)->get()->toArray();
+                $data['MC Number'] = $sup->mc_number;
+                $data['USDOT']= $sup->usdot;
+                $data['SCAC']= $sup->scac;
+                $data['CAAT']= $sup->caat;
+                $servicess = ServiceSupplier::where('supplier_id',$sup->id)->get();
+                foreach($servicess as $servs)
                 {
-                    if($sser['id'] == $servs['id_service_detail'])
+                    $iv = 0;
+                    foreach($serv as $sser)
                     {
-                        $serv[$iv]['aplica'] = true;
+                        if($sser['id'] == $servs['id_service_detail'])
+                        {
+                            $serv[$iv]['aplica'] = true;
+                        }
+                        $iv++;
                     }
-                    $iv++;
                 }
             }
             $data['action'] = 'edit';
-        }
 
-        $data['sup_services'] = $serv;
+        }
+        $data['type'] = $type;
+        if($type == 'supplier')
+        {
+            $data['sup_services'] = $serv;
+            $data['equipment'] = $equip;
+        }
         $data['contacts'] = $conct;
-        $data['equipment'] = $equip;
         return $data;
     }
     public function form(Form $form): Form
@@ -136,11 +152,10 @@ class CreateBusinessDirectory extends Component implements HasForms
             ->extraAttributes(['style'=>'gap:0.4rem !important'])
             ->model($this->record)
             ->schema([
-                Tabs::make()
-                ->tabs([
-                    Tab::make('General Data')
+                    Section::make('General Data')
+                    ->columnSpanFull()
                     ->schema([
-                            Split::make([
+                        Split::make([
                             Group::make()->schema([
                             Forms\Components\Hidden::make('action'),
                             Forms\Components\Hidden::make('id'),
@@ -203,11 +218,12 @@ class CreateBusinessDirectory extends Component implements HasForms
                                 ->email()
                                 ->required()
                                 ->maxLength(255)->columnSpan(2),
-                            ])->columns(7),
-                            ])->columnSpanFull(),
-                            Tab::make('Credit Info')
-                            ->schema([
-                            Group::make()->schema([
+                            ])->columns(7)
+                    ]),
+                    Section::make('Credit Info')
+                    ->columnSpanFull()
+                    ->schema([
+                        Group::make()->schema([
                             Forms\Components\TextInput::make('credit_days')
                                 ->numeric()->default(0)->columnSpan(2)->required(),
                             Forms\Components\DatePicker::make('credit_expiration_date')
@@ -227,14 +243,23 @@ class CreateBusinessDirectory extends Component implements HasForms
                                 ->label('Document')
                                 ->downloadable(),
                             Forms\Components\FileUpload::make('tarifario')
-                                ->downloadable(),
+                                ->downloadable()
+                                ->visible(function(Get $get){
+                                    if($get('type') != 'customer') return true;
+                                    else return false;
+                                }),
                             Forms\Components\Textarea::make('notes')
                                 ->columnSpanFull(),
                     ])->columns(5)
-                ])->columnSpanFull(),
-                Tab::make('Supplier Details and Services')
-                ->schema([
-                    TextInput::make('MC Number')
+                    ]),
+                    Section::make('Supplier Details and Services')
+                    ->columnSpanFull()
+                    ->visible(function(Get $get){
+                        if($get('type') == 'supplier') return true;
+                        else return false;
+                    })
+                    ->schema([
+                        TextInput::make('MC Number')
                         ->label('MC Number')->required(),
                     TextInput::make('USDOT')
                         ->label('USDOT')->required(),
@@ -258,28 +283,34 @@ class CreateBusinessDirectory extends Component implements HasForms
                         ])->columns(1)
                         ->grid(5)
                     ])
-                ])->columns(4),
-                Tab::make('Contact')
-                ->label('Contacts')
-                ->schema([
-                    Repeater::make('contacts')
-                    ->reorderable(false)
-                    ->defaultItems(0)
-                    ->addActionLabel('Add Contact')
+                    ])->columns(4),
+                    Section::make('Contact')
+                    ->heading('')
+                    ->columnSpanFull()
                     ->schema([
-                        TextInput::make('name')
-                            ->columnSpan(2),
-                        TextInput::make('last_name')
-                            ->columnSpan(2),
-                        TextInput::make('office_phone'),
-                        TextInput::make('cellphone'),
-                        TextInput::make('working_hours'),
-                        TextInput::make('email')->columnSpan(3),
-                        TextInput::make('notes')->columnSpan(4),
-                    ])->columns(7)
+                        Repeater::make('contacts')
+                        ->reorderable(false)
+                        ->defaultItems(0)
+                        ->addActionLabel('Add Contact')
+                        ->schema([
+                            TextInput::make('name')
+                                ->columnSpan(2),
+                            TextInput::make('last_name')
+                                ->columnSpan(2),
+                            TextInput::make('office_phone'),
+                            TextInput::make('cellphone'),
+                            TextInput::make('working_hours'),
+                            TextInput::make('email')->columnSpan(3),
+                            TextInput::make('notes')->columnSpan(4),
+                        ])->columns(7)
                     ]),
-                    Tab::make('sup_equipment')
-                    ->label('Equipment')
+                    Section::make('sup_equipment')
+                    ->heading('')
+                    ->visible(function(Get $get){
+                        if($get('type') == 'supplier') return true;
+                        else return false;
+                    })
+                    ->columnSpanFull()
                     ->schema([
                         Repeater::make('equipment')
                         ->reorderable(false)
@@ -290,8 +321,7 @@ class CreateBusinessDirectory extends Component implements HasForms
                             TextInput::make('description')
                             ->columnSpan(2)
                         ])->columns(3)
-                    ])
-                ]),
+                    ]),
                     Actions::make([
                         ActionsAction::make('Save')
                         ->color(Color::hex('#080808'))
@@ -299,47 +329,41 @@ class CreateBusinessDirectory extends Component implements HasForms
                         ->requiresConfirmation()
                         ->action(function(){
                            $data = $this->form->getState();
-                           //dd($data);
-                           $data['type'] = 'supplier';
                            DB::statement('SET FOREIGN_KEY_CHECKS=0');
                            if($data['action'] == 'edit')
                            {
                                 $graba = $data;
                                 unset($graba['action'],$graba['MC Number'],$graba['USDOT'],$graba['SCAC'],$graba['CAAT'],$graba['sup_services'],$graba['contacts'],$graba['equipment']);
                                 BusinessDirectory::where('id',$data['id'])->update($graba);
-                                $recid = $data['id'];
-                                $sup = Supplier::where('directory_entry_id',$data['id'])->get()[0];
-                                Supplier::where('directory_entry_id',$data['id'])->update([
-                                    'mc_number'=>$data['MC Number'],
-                                    'usdot'=>$data['USDOT'],
-                                    'scac'=>$data['SCAC'],
-                                    'caat'=>$data['CAAT']
-                                ]);
-                                $supid = $sup['id'];
-                                DB::table('services_suppliers')->where('supplier_id',$supid)->delete();
-                                DB::table('contacts')->where('directory_entry_id',$recid)->delete();
-                                DB::table('supplier_equipments')->where('supplier_id',$supid)->delete();
+                                if($data['type'] == 'supplier')
+                                {
+                                    $recid = $data['id'];
+                                    $sup = Supplier::where('directory_entry_id',$data['id'])->get()[0];
+                                    Supplier::where('directory_entry_id',$data['id'])->update([
+                                        'mc_number'=>$data['MC Number'],
+                                        'usdot'=>$data['USDOT'],
+                                        'scac'=>$data['SCAC'],
+                                        'caat'=>$data['CAAT']
+                                    ]);
+                                    $supid = $sup['id'];
+                                    DB::table('services_suppliers')->where('supplier_id',$supid)->delete();
+                                    DB::table('contacts')->where('directory_entry_id',$recid)->delete();
+                                    DB::table('supplier_equipments')->where('supplier_id',$supid)->delete();
+                                }
                            }
                            else
                            {
                                 $record = BusinessDirectory::create($data);
                                 $recid = $record->getKey();
-                                $supid = DB::table('suppliers')->insertGetId([
-                                    'directory_entry_id'=>$recid,
-                                    'mc_number'=>$data['MC Number'],
-                                    'usdot'=>$data['USDOT'],
-                                    'scac'=>$data['SCAC'],
-                                    'caat'=>$data['CAAT']
-                                ]);
-                           }
-                           $services = $data['sup_services'];
-                           foreach($services as $service)
-                           {
-                                if($service['aplica'] == true)
+                                if($data['type'] == 'supplier')
                                 {
-                                    DB::table('services_suppliers')->insert([
-                                        'supplier_id'=>$supid,
-                                        'id_service_detail'=>$service['id']
+
+                                    $supid = DB::table('suppliers')->insertGetId([
+                                        'directory_entry_id'=>$recid,
+                                        'mc_number'=>$data['MC Number'],
+                                        'usdot'=>$data['USDOT'],
+                                        'scac'=>$data['SCAC'],
+                                        'caat'=>$data['CAAT']
                                     ]);
                                 }
                            }
@@ -357,19 +381,37 @@ class CreateBusinessDirectory extends Component implements HasForms
                                     'notes'=>$contact['notes']
                                 ]);
                            }
-                           $equipments = $data['equipment'];
-                           foreach($equipments as $equipment)
+                           if($data['type'] == 'supplier')
                            {
-                                DB::table('supplier_equipments')->insert([
-                                    'supplier_id'=>$supid,
-                                    'equipment'=>$equipment['equipment'],
-                                    'description'=>$equipment['description']
-                                ]);
+                                $services = $data['sup_services'];
+                                foreach($services as $service)
+                                {
+                                        if($service['aplica'] == true)
+                                        {
+                                            DB::table('services_suppliers')->insert([
+                                                'supplier_id'=>$supid,
+                                                'id_service_detail'=>$service['id']
+                                            ]);
+                                        }
+                                }
+                                $equipments = $data['equipment'];
+                                foreach($equipments as $equipment)
+                                {
+                                     DB::table('supplier_equipments')->insert([
+                                         'supplier_id'=>$supid,
+                                         'equipment'=>$equipment['equipment'],
+                                         'description'=>$equipment['description']
+                                     ]);
+                                }
                            }
                            DB::statement('SET FOREIGN_KEY_CHECKS=1');
+                            $typ = $data['type'];
+                            if($typ == 'supplier') $typ = 'Supplier';
+                            if($typ == 'customer') $typ = 'Customer';
+                            if($typ == 'station') $typ = 'Station';
                            Notification::make()
                            ->send()
-                           ->title('Supplier Saved')
+                           ->title($typ.' Saved')
                            ->duration(5000)
                            ->color('success')
                            ->success();

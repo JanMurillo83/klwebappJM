@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\User\UserController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\BusinessDirectoryController;
+use App\Http\Controllers\DataModels;
 use App\Http\Controllers\serviceController;
 use App\Http\Controllers\ExchangeRateController;
 use App\Livewire\BusinessDirectory;
@@ -80,5 +81,5 @@ Route::middleware([
     // Ruta para guardar el contacto
     Route::post('/business-directory/{id}/contacts/store', [BusinessDirectoryController::class, 'storeContact'])->name('business-directory.contacts.store');
     Route::get('/business-directory/create2', App\Livewire\BusinessDirectory\CreateBusinessDirectory::class)->name('business-directory.create2');
-
+    Route::get('/datamodel/equipment',[DataModels::class,'sup_equipment']);
 });
