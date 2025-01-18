@@ -82,5 +82,6 @@ Route::middleware([
     Route::post('/business-directory/{id}/contacts/store', [BusinessDirectoryController::class, 'storeContact'])->name('business-directory.contacts.store');
     Route::get('/business-directory/create2', App\Livewire\BusinessDirectory\CreateBusinessDirectory::class)->name('business-directory.create2');
     Route::get('/shipment/form', App\Livewire\Shipment\CreateShipment::class)->name('shipment.form');
+    Route::get('/shipment/dash', App\Livewire\Shipment\ListShipments::class)->name('shipment.dashboard');
     Route::get('/datamodel/equipment',[DataModels::class,'sup_equipment']);
 });

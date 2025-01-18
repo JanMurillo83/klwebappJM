@@ -2,52 +2,56 @@
 
 namespace App\Livewire\Shipment;
 
-use App\Models\BusinessDirectory;
+use Carbon;
+use App\Models\Uom;
+use Filament\Forms;
+use App\Models\Service;
+use Filament\Forms\Get;
+use Filament\Forms\Set;
+use Livewire\Component;
+use App\Models\Modality;
+use Filament\Forms\Form;
+use App\Models\ChargeType;
+use App\Models\UrgencyType;
 use App\Models\ExchangeRate;
 use App\Models\FreightClass;
 use App\Models\HandlingType;
 use App\Models\MaterialType;
-use App\Models\Modality;
-use App\Models\Service;
 use App\Models\ServiceDetail;
 use App\Models\ShipmentStatus;
+use App\Models\BusinessDirectory;
 use App\Models\SupplierEquipment;
-use App\Models\Uom;
-use App\Models\UrgencyType;
-use Awcodes\TableRepeater\Components\TableRepeater;
 use Awcodes\TableRepeater\Header;
-use Filament\Forms;
-use Filament\Forms\Components\Actions;
-use Filament\Forms\Components\Actions\Action;
-use Filament\Forms\Components\Checkbox;
-use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\DateTimePicker;
-use Filament\Forms\Components\Fieldset;
-use Filament\Forms\Components\FileUpload;
+use Filament\Support\Colors\Color;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\HtmlString;
+use Illuminate\Contracts\View\View;
 use Filament\Forms\Components\Group;
-use Filament\Forms\Components\Hidden;
-use Filament\Forms\Components\Placeholder;
-use Filament\Forms\Components\Repeater;
-use Filament\Forms\Components\Section;
-use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Split;
+use Filament\Support\Enums\MaxWidth;
+use Illuminate\Support\Facades\Auth;
+use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Toggle;
+use Filament\Support\Enums\Alignment;
+use Filament\Forms\Components\Actions;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Contracts\HasForms;
+use Filament\Support\Enums\ActionSize;
+use Filament\Forms\Components\Checkbox;
+use Filament\Forms\Components\Fieldset;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\TimePicker;
-use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\Placeholder;
+use Filament\Forms\Components\Actions\Action;
+use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Concerns\InteractsWithForms;
-use Filament\Forms\Contracts\HasForms;
-use Filament\Forms\Form;
-use Filament\Forms\Get;
-use Filament\Forms\Set;
-use Filament\Support\Colors\Color;
-use Filament\Support\Enums\ActionSize;
-use Filament\Support\Enums\Alignment;
-use Filament\Support\Enums\MaxWidth;
-use Livewire\Component;
-use Illuminate\Contracts\View\View;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\HtmlString;
+use Awcodes\TableRepeater\Components\TableRepeater;
 
 class CreateShipment extends Component implements HasForms
 {
@@ -485,7 +489,7 @@ class CreateShipment extends Component implements HasForms
                                             ->label('Equipment')
                                             ->required()
                                             ->reactive()
-                                            ->options(function(Get $get){return SupplierEquipment::where('supplier_id',$get('uscar_entity'))->pluck('equipment','id');})
+                                            ->options(function(Get $get){return SupplierEquipment::all()->pluck('equipment','id');})
                                             ->columnSpan(5),
                                             TextInput::make('uscar_truck')
                                             ->label('Truck No.')
@@ -767,7 +771,7 @@ class CreateShipment extends Component implements HasForms
                                             ->label('Equipment')
                                             ->required()
                                             ->reactive()
-                                            ->options(function(Get $get){return SupplierEquipment::where('supplier_id',$get('uscar_entity'))->pluck('equipment','id');})
+                                            ->options(function(Get $get){return SupplierEquipment::all()->pluck('equipment','id');})
                                             ->columnSpan(5),
                                             TextInput::make('mxcar_truck')
                                             ->label('Truck No.')
@@ -811,7 +815,8 @@ class CreateShipment extends Component implements HasForms
                                                 Repeater::make('mxcar_charges')->label('')->addActionLabel('Add')
                                                 ->addActionAlignment(Alignment::Right)->reorderable(false)
                                                 ->schema([
-                                                    Select::make('mxcar_charge_type')->label('Charge Type')->columnSpan(5),
+                                                    Select::make('mxcar_charge_type')->label('Charge Type')
+                                                    ->options(ChargeType::all()->pluck('name','id'))->columnSpan(5),
                                                     TextInput::make('mxcar_charge_descr')->label('Description')->columnSpan(5),
                                                     TextInput::make('mxcar_charge_cost')->label('Cost')->columnSpan(3),
                                                     Select::make('mxcar_charge_currency')
@@ -827,6 +832,15 @@ class CreateShipment extends Component implements HasForms
                                     ->addActionLabel('Add')->reorderable(false)
                                 ]),
                                 Group::make([
+                                    FieldSet::make('07')->label(fn () => new HtmlString('<label style="color:red"><b>Status</b></label>'))
+                                    ->schema([
+                                        TextInput::make('manual_status')->label('Status')->columnspan(12),
+                                        TimePicker::make('time_status')->label('Time')->columnspan(4),
+                                        TimePicker::make('eta_delivery_status')->label('ETA to Delivery')->columnspan(4),
+                                        Textarea::make('notes_status')->label('Notes')->columnSpanFull()
+                                    ])->columnSpanFull()->columns(20)
+                                ])->columnSpanFull()->columns(20),
+                                Group::make([
                                     Actions::make([
                                         Action::make('Save')
                                         ->color(Color::hex('#080808'))
@@ -834,14 +848,16 @@ class CreateShipment extends Component implements HasForms
                                         ->requiresConfirmation()
                                         ->action(function(){
                                             $data = $this->form->getState();
-                                            dd($data);
+                                            $this::grabar($data);
                                         })->size(ActionSize::ExtraLarge),
                                         Action::make('Cancel')
                                         ->color(Color::Red)
                                         ->button()
-                                        ->url(function(){
+                                        /*->url(function(){
                                             return route('business-directory.index');
-                                        })->size(ActionSize::ExtraLarge)
+                                        })*/
+                                        ->url('dash')
+                                        ->size(ActionSize::ExtraLarge)
                                     ])
                                 ])->columnSpanFull()
                                 //----------------------------------------------------------------------------
@@ -892,6 +908,122 @@ class CreateShipment extends Component implements HasForms
     public function render(): View
     {
         return view('livewire.shipment.create-shipment');
+    }
+
+    public static function grabar($data)
+    {
+        dd($data);
+        DB::statement('SET FOREIGN_KEY_CHECKS=0');
+        $subserv = '';
+        if($data['SubServ1'] == true) $subserv = 'Domestic USA';
+        if($data['SubServ2'] == true) $subserv = 'Domestic MX';
+        if($data['SubServ3'] == true) $subserv = 'Door to Door Import';
+        if($data['SubServ4'] == true) $subserv = 'Door to Door Export';
+        $servid = DB::table('services')->insertGetId([
+            'exchange_rate_id'=>$data['exchange_rate_id'],
+            'user_id'=>$data['user_id'],
+            'business_directory_id'=>$data['business_directory_id'],
+            'shipment_status'=>$data['shipment_status'],
+            'id_service_detail'=>$data['id_service_detail'],
+            'urgency_ltl_id'=>0,
+            'modality_id'=>0,
+            'cargo_id'=>0,
+            'rate_to_customer'=>$data['rate_to_customer'],
+            'currency'=>$data['currency'],
+            'billing_customer_reference'=>$data['billing_customer_reference'],
+            'pickup_number'=>$data['pickup_number'],
+            'expedited'=>$data['expedited'],
+            'hazmat'=>$data['hazmat'],
+            'team_driver'=>$data['team_driver'],
+            'round_trip'=>$data['round_trip'],
+            'un_number'=>$data['un_number'],
+            'manual_status'=>$data['manual_status'],
+            'time_status'=>$data['time_status'],
+            'eta_delivery_status'=>$data['eta_delivery_status'],
+            'notes_status'=>$data['notes_status'],
+            'sub_services'=>$subserv,
+            'created_at'=>Carbon\Carbon::now()
+        ]);
+        DB::table('shippers')->insert([
+            'service_id'=>$servid,
+            'requested_pickup_date'=>$data['requested_pickup_date'],
+            'time'=>$data['time'],
+            'scheduled_border_crossing_date'=>$data['scheduled_border_crossing_date'],
+            'drop_reception_date'=>$data['requested_pickup_date_2'],
+            'created_at'=>Carbon\Carbon::now()
+        ]);
+        $stop1 = $data['stop_off1'];
+        $pos = 1;
+        foreach($stop1 as $stop)
+        {
+            if($stop['Station'] != null)
+            {
+                DB::table('stop_offs')->insert([
+                    'service_id'=>$servid,
+                    'role'=>'pickup',
+                    'business_directory_id'=>$data['business_directory_id'],
+                    'position'=>$pos,
+                    'created_at'=>Carbon\Carbon::now()
+                ]);
+                $pos++;
+            }
+        }
+        $stop1 = $data['stop_off2'];
+        $pos = 1;
+        foreach($stop1 as $stop)
+        {
+            if($stop['Station'] != null)
+            {
+                DB::table('stop_offs')->insert([
+                    'service_id'=>$servid,
+                    'role'=>'delivery',
+                    'business_directory_id'=>$data['business_directory_id'],
+                    'position'=>$pos,
+                    'created_at'=>Carbon\Carbon::now()
+                ]);
+                $pos++;
+            }
+        }
+        DB::table('consignees')->insert([
+            'service_id'=>$servid,
+            'delivery_date_requested'=>$data['requested_pickup_date'],
+            'delivery_time_requested'=>$data['time'],
+            'created_at'=>Carbon\Carbon::now()
+        ]);
+
+        if($data['id_service_detail']==1)
+        {
+            DB::table('cargo')->insert([
+                'handling_type'=>$data['handling_type'],
+                'material_type'=>$data['material_type'],
+                'class'=>$data['class'],
+                'count'=>$data['count'],
+                'stackable'=>$data['stackable'],
+                'weight'=>$data['weight'],
+                'uom_weight'=>$data['uom_weight'],
+                'length'=>$data['length'],
+                'width'=>$data['width'],
+                'height'=>$data['height'],
+                'uom_dimensions'=>$data['uom_dimensions'],
+                'total_yards'=>$data['total_yards'],
+                'created_at'=>Carbon\Carbon::now()
+            ]);
+        }
+        if($data['SubServ1'] == true)
+        {
+            if($data['SubSubServ1']==true)
+            {
+                BusinessDirectory::where('id',$data['uscar_entity'])->get()[0]->company;
+
+            }
+        }
+        DB::statement('SET FOREIGN_KEY_CHECKS=1');
+        Notification::make()
+        ->title('Saved')
+        ->success()
+        ->persistent()
+        ->url('dash')
+        ->send();
     }
 }
 

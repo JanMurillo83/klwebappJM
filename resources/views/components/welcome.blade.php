@@ -4,8 +4,8 @@
         {{-- <x-button class="bg-red-500">
             {{ __('FTL') }}
         </x-button> --}}
-        <a href="{{ route('shipment.form') }}" class="inline-block px-4 py-2 text-white bg-red-600 rounded hover:bg-red-600 focus:outline-none focus:shadow-outline">
-            {{ __('Add New Shipment') }}
+        <a href="{{ route('shipment.dashboard') }}" class="inline-block px-4 py-2 text-white bg-red-600 rounded hover:bg-red-600 focus:outline-none focus:shadow-outline">
+            {{ __('Shipments Panel') }}
         </a>
 
         <!--<x-button class="bg-red-500">
