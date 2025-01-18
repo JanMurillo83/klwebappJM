@@ -1,14 +1,14 @@
-<div class="p-2 ms-12 me-12 bg-white">
+<div class="p-2 bg-white ms-12 me-12">
     <!-- Service buttons -->
     <div class="flex flex-wrap gap-x-2 gap-y-2">
         {{-- <x-button class="bg-red-500">
             {{ __('FTL') }}
         </x-button> --}}
-        <a href="{{ route('services.index') }}" class="inline-block bg-red-600 text-white py-2 px-4 rounded hover:bg-red-600 focus:outline-none focus:shadow-outline">
-            {{ __('FTL') }}
+        <a href="{{ route('shipment.form') }}" class="inline-block px-4 py-2 text-white bg-red-600 rounded hover:bg-red-600 focus:outline-none focus:shadow-outline">
+            {{ __('Add New Shipment') }}
         </a>
-        
-        <x-button class="bg-red-500">
+
+        <!--<x-button class="bg-red-500">
             {{ __('LTL') }}
         </x-button>
         <x-button class="bg-red-500">
@@ -34,13 +34,13 @@
         </x-button>
         <x-button class="bg-red-500">
             {{ __('D. Transfer') }}
-        </x-button>
+        </x-button>-->
     </div>
 
 
 
 <div class="relative mt-12 overflow-x-auto">
-    <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
+    <table class="w-full text-sm text-left text-gray-500 rtl:text-right dark:text-gray-400">
         <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
             <tr>
                 <th scope="col" class="px-6 py-3">
@@ -96,7 +96,7 @@
                                             d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
                                     </svg>
                                 </a>
-                   
+
                 </td>
             </tr>
         </tbody>

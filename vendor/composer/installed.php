@@ -3,7 +3,7 @@
         'name' => 'laravel/laravel',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => '6cae27b368a9d2b6a753e09ca50d57c5aa206cb7',
+        'reference' => '5e0b4232da1f464a022982b702173389760b2910',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -16,6 +16,15 @@
             'reference' => 'f1c4fcd41a6db1467ed75bc295b62f582d6fd0fe',
             'type' => 'library',
             'install_path' => __DIR__ . '/../anourvalar/eloquent-serialize',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
+        'awcodes/filament-table-repeater' => array(
+            'pretty_version' => 'v3.1.0',
+            'version' => '3.1.0.0',
+            'reference' => 'beaa9cdb25b4211b00c675bbcbf2584cd777536c',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../awcodes/filament-table-repeater',
             'aliases' => array(),
             'dev_requirement' => false,
         ),
@@ -568,7 +577,7 @@
         'laravel/laravel' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => '6cae27b368a9d2b6a753e09ca50d57c5aa206cb7',
+            'reference' => '5e0b4232da1f464a022982b702173389760b2910',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
@@ -1033,8 +1042,8 @@
         'psr/log-implementation' => array(
             'dev_requirement' => false,
             'provided' => array(
-                0 => '3.0.0',
-                1 => '1.0|2.0|3.0',
+                0 => '1.0|2.0|3.0',
+                1 => '3.0.0',
             ),
         ),
         'psr/simple-cache' => array(
