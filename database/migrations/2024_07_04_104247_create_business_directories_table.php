@@ -28,23 +28,24 @@ return new class extends Migration
             $table->string('phone', 20); // Teléfono
             $table->string('website', 255)->nullable(); // Sitio web
             $table->string('email', 255); // Correo electrónico
+            $table->string('billing_reference')->nullable();
             $table->integer('credit_days')->nullable(); // Días de crédito
             $table->date('credit_expiration_date')->nullable(); // Fecha de expiración del crédito
             $table->integer('free_loading_unloading_hours')->nullable(); // Horas de carga y descarga gratuita
-            
+
             // Agregar la columna para la relación foránea
             $table->unsignedBigInteger('factory_company_id')->nullable(); // Aquí es donde declaras la columna
-        
+
             // Declarar la relación foránea
             $table->foreign('factory_company_id')->references('id')->on('factory_companies')->onDelete('set null');
-        
+
             $table->text('notes')->nullable(); // Notas adicionales
             $table->text('add_document')->nullable(); // Campo para agregar URL de documentos
             $table->date('document_expiration_date')->nullable(); // Fecha de expiración del documento
             $table->string('picture', 255)->nullable(); // URL de la imagen o foto
             $table->text('tarifario')->nullable(); // Tarifario
             $table->timestamps();
-        });        
+        });
     }
 
     /**

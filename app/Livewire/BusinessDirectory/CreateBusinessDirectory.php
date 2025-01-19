@@ -224,6 +224,14 @@ class CreateBusinessDirectory extends Component implements HasForms
                     ->columnSpanFull()
                     ->schema([
                         Group::make()->schema([
+                            Forms\Components\TextInput::make('billing_reference')
+                                ->label('Billing Reference')->required(function (Get $get){
+                                    if($get('type') == 'customer') return true;
+                                    else return false;
+                                })->columnSpan(2)->disabled(function (Get $get){
+                                    if($get('type') == 'customer') return false;
+                                    else return true;
+                                }),
                             Forms\Components\TextInput::make('credit_days')
                                 ->numeric()->default(0)->columnSpan(2)->required(),
                             Forms\Components\DatePicker::make('credit_expiration_date')
@@ -237,11 +245,12 @@ class CreateBusinessDirectory extends Component implements HasForms
                                 ->columnSpan(2)->required(),
                             Forms\Components\DatePicker::make('document_expiration_date')
                                 ->default(Carbon::now())->columnSpan(2),
-                            ])->columns(10),
-                            Group::make()->schema([
                             Forms\Components\FileUpload::make('add_document')
+                                ->columnSpan(4)
                                 ->label('Document')
                                 ->downloadable(),
+                            ])->columns(10),
+                            Group::make()->schema([
                             Forms\Components\FileUpload::make('tarifario')
                                 ->downloadable()
                                 ->visible(function(Get $get){

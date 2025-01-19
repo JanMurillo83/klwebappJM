@@ -26,6 +26,7 @@ class BusinessDirectory extends Model
         'phone',
         'website',
         'email',
+        'billing_reference',
         'credit_days',
         'credit_expiration_date',
         'free_loading_unloading_hours',
