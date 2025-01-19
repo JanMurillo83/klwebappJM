@@ -533,7 +533,8 @@ class CreateShipment extends Component implements HasForms
                                                 Repeater::make('uscar_charges')->label('')->addActionLabel('Add')
                                                 ->addActionAlignment(Alignment::Right)->reorderable(false)
                                                 ->schema([
-                                                    Select::make('uscar_charge_type')->label('Charge Type')->columnSpan(5),
+                                                    Select::make('uscar_charge_type')->label('Charge Type')
+                                                     ->options(ChargeType::all()->pluck('name','id'))->columnSpan(5),
                                                     TextInput::make('uscar_charge_descr')->label('Description')->columnSpan(5),
                                                     TextInput::make('uscar_charge_cost')->label('Cost')->columnSpan(3),
                                                     Select::make('uscar_charge_currency')
@@ -591,14 +592,15 @@ class CreateShipment extends Component implements HasForms
                                                 Repeater::make('uscar_charges')->label('')->addActionLabel('Add')
                                                 ->addActionAlignment(Alignment::Right)->reorderable(false)
                                                 ->schema([
-                                                    Select::make('uscar_charge_type')->label('Charge Type')->columnSpan(5),
-                                                    TextInput::make('uscar_charge_descr')->label('Description')->columnSpan(5),
-                                                    TextInput::make('uscar_charge_cost')->label('Cost')->columnSpan(3),
-                                                    Select::make('uscar_charge_currency')
+                                                    Select::make('usbrok_charge_type')->label('Charge Type')
+                                                        ->options(ChargeType::all()->pluck('name','id'))->columnSpan(5),
+                                                    TextInput::make('usbrok_charge_descr')->label('Description')->columnSpan(5),
+                                                    TextInput::make('usbrokr_charge_cost')->label('Cost')->columnSpan(3),
+                                                    Select::make('usbrok_charge_currency')
                                                     ->required()->label('Currency')
                                                     ->options(['MXN'=>'MXN','USD'=>'USD'])->columnSpan(3),
-                                                    Toggle::make('uscar_charge_iva')->label('+IVA')->inline(false)->columnSpan(2),
-                                                    Toggle::make('uscar_charge_isr')->label('-RET')->inline(false)->columnSpan(2)
+                                                    Toggle::make('usbrok_charge_iva')->label('+IVA')->inline(false)->columnSpan(2),
+                                                    Toggle::make('usbrok_charge_isr')->label('-RET')->inline(false)->columnSpan(2)
                                                 ])->columnSpanFull()->columns(20)
                                             ])->columnSpanFull()->columns(20),
                                     ])->columnSpanFull()->columns(20)->addActionAlignment(Alignment::Right)
@@ -623,15 +625,15 @@ class CreateShipment extends Component implements HasForms
                                         ->required()
                                         ->options(BusinessDirectory::where('type','supplier')->pluck('company','id'))
                                         ->columnSpan(5),
-                                        TextInput::make('freight')
+                                        TextInput::make('trans_freight')
                                         ->label('Freight Rate')
                                         ->required()
                                         ->columnSpan(3),
-                                        Select::make('uscar_currency')
+                                        Select::make('trans_currency')
                                         ->required()->label('Currency')
                                         ->options(['MXN'=>'MXN','USD'=>'USD'])->columnSpan(3),
-                                        Toggle::make('uscar_iva')->label('+IVA')->inline(false)->columnSpan(2),
-                                        Toggle::make('uscar_isr')->label('-RET')->inline(false)->columnSpan(2)
+                                        Toggle::make('trans_iva')->label('+IVA')->inline(false)->columnSpan(2),
+                                        Toggle::make('trans_isr')->label('-RET')->inline(false)->columnSpan(2)
                                         ])->columnSpanFull()->columns(20),
                                         Group::make([
                                             TextInput::make('trans_gps')
@@ -664,7 +666,8 @@ class CreateShipment extends Component implements HasForms
                                                 Repeater::make('trans_charges')->label('')->addActionLabel('Add')
                                                 ->addActionAlignment(Alignment::Right)->reorderable(false)
                                                 ->schema([
-                                                    Select::make('trans_charge_type')->label('Charge Type')->columnSpan(5),
+                                                    Select::make('trans_charge_type')->label('Charge Type')
+                                                        ->options(ChargeType::all()->pluck('name','id'))->columnSpan(5),
                                                     TextInput::make('trans_charge_descr')->label('Description')->columnSpan(5),
                                                     TextInput::make('trans_charge_cost')->label('Cost')->columnSpan(3),
                                                     Select::make('trans_charge_currency')
@@ -719,7 +722,8 @@ class CreateShipment extends Component implements HasForms
                                                 Repeater::make('mane_charges')->label('')->addActionLabel('Add')
                                                 ->addActionAlignment(Alignment::Right)->reorderable(false)
                                                 ->schema([
-                                                    Select::make('mane_charge_type')->label('Charge Type')->columnSpan(5),
+                                                    Select::make('mane_charge_type')->label('Charge Type')
+                                                        ->options(ChargeType::all()->pluck('name','id'))->columnSpan(5),
                                                     TextInput::make('mane_charge_descr')->label('Description')->columnSpan(5),
                                                     TextInput::make('mane_charge_cost')->label('Cost')->columnSpan(3),
                                                     Select::make('mane_charge_currency')
@@ -949,7 +953,12 @@ class CreateShipment extends Component implements HasForms
             'requested_pickup_date'=>$data['requested_pickup_date'],
             'time'=>$data['time'],
             'scheduled_border_crossing_date'=>$data['scheduled_border_crossing_date'],
-            'drop_reception_date'=>$data['requested_pickup_date_2'],
+            'created_at'=>Carbon\Carbon::now()
+        ]);
+        DB::table('consignees')->insert([
+            'service_id'=>$servid,
+            'delivery_date_requested'=>$data['requested_pickup_date2'],
+            'delivery_time_requested'=>$data['time_2'],
             'created_at'=>Carbon\Carbon::now()
         ]);
         $stop1 = $data['stop_off1'];
@@ -984,16 +993,10 @@ class CreateShipment extends Component implements HasForms
                 $pos++;
             }
         }
-        DB::table('consignees')->insert([
-            'service_id'=>$servid,
-            'delivery_date_requested'=>$data['requested_pickup_date'],
-            'delivery_time_requested'=>$data['time'],
-            'created_at'=>Carbon\Carbon::now()
-        ]);
-
-        if($data['id_service_detail']==1)
+        $serv_det = $data['id_service_detail'];
+        if($serv_det == 1||$serv_det == 2||$serv_det == 4||$serv_det==10)
         {
-            DB::table('cargo')->insert([
+            $carg = DB::table('cargo')->insertGetId([
                 'handling_type'=>$data['handling_type'],
                 'material_type'=>$data['material_type'],
                 'class'=>$data['class'],
@@ -1008,13 +1011,828 @@ class CreateShipment extends Component implements HasForms
                 'total_yards'=>$data['total_yards'],
                 'created_at'=>Carbon\Carbon::now()
             ]);
+            DB::table('services')->where('id',$servid)->update([
+                'cargo_id'=>$carg
+            ]);
+        }
+        if($serv_det == 2||$serv_det == 4)
+        {
+            $tlt = DB::table('urgency_ltl')->insertGetId([
+                'type'=>$data['urgency_type'],
+                'emergency_company'=>$data['emergency_company'],
+                'company_ID'=>$data['tlt_company_id'],
+                'phone'=>$data['tlt_phone'],
+                'created_at'=>carbon\Carbon::now()
+            ]);
+            DB::table('services')->where('id',$servid)->update([
+                'urgency_ltl_id'=>$tlt
+            ]);
+        }
+        if($serv_det == 3)
+        {
+            $moda = DB::table('modality')->insertGetId([
+                'type'=>$data['dray_type'],
+                'container'=>$data['dray_container'],
+                'size'=>$data['dray_size'],
+                'weight'=>$data['dray_weight'],
+                'uom'=>$data['dray_unit'],
+                'material_type'=>$data['dray_material'],
+                'created_at'=>carbon\Carbon::now()
+            ]);
+            DB::table('services')->where('id',$servid)->update([
+                'modality_id'=>$moda
+            ]);
         }
         if($data['SubServ1'] == true)
         {
             if($data['SubSubServ1']==true)
             {
-                BusinessDirectory::where('id',$data['uscar_entity'])->get()[0]->company;
-
+                $name = BusinessDirectory::where('id',$data['uscar_entity'])->get()[0]->company;
+                $cardet = DB::table('carrier_details')->insertGetId([
+                    'name'=>$name,
+                    'description'=>'US Carrier',
+                    'id_service_detail'=>$data['id_service_detail'],
+                    'created_at'=>Carbon\Carbon::now()
+                ]);
+                $cost_det = DB::table('cost_details')->insertGetId([
+                    'freight_rate'=>$data['uscar_freight'],
+                    'currency'=>$data['uscar_currency'],
+                    'iva'=>$data['uscar_iva'],
+                    'ret'=>$data['uscar_isr'],
+                    'gps_link'=>$data['uscar_gps'],
+                    'created_at'=>Carbon\Carbon::now()
+                ]);
+                $equip = DB::table('equipment_details')->insertGetId([
+                    'equipment'=>$data['uscar_equipment'],
+                    'truck_number'=>$data['uscar_truck'],
+                    'truck_plates'=>$data['uscar_truck_plat'],
+                    'trailer_number'=>$data['uscar_trailer'],
+                    'trailer_plates'=>$data['uscar_trailer_plat'],
+                    'created_at'=>Carbon\Carbon::now()
+                ]);
+                $pick = DB::table('pickup_details')->insertGetId([
+                    'real_pickup_date'=>$data['uscar_pick_date'],
+                    'in_time'=>$data['uscar_pick_intime'],
+                    'out_time'=>$data['uscar_pick_outime'],
+                    'detention_hours'=>$data['uscar_pick_deten'],
+                    'created_at'=>Carbon\Carbon::now()
+                ]);
+                $deli = DB::table('delivery_details')->insertGetId([
+                    'real_delivery_date'=>$data['uscar_deli_date'],
+                    'delivery_in_time'=>$data['uscar_deli_intime'],
+                    'delivery_out_time'=>$data['uscar_deli_outime'],
+                    'delivery_detention_hours'=>$data['uscar_deli_deten'],
+                    'created_at'=>Carbon\Carbon::now()
+                ]);
+                $carrier = DB::table('carriers')->insertGetId([
+                    'service_id'=>$servid,
+                    'carrier_detail_id'=>$cardet,
+                    'business_directory_id'=>$data['uscar_entity'],
+                    'cost_details_id'=>$cost_det,
+                    'equipment_details_id'=>$equip,
+                    'gps_link'=>$data['uscar_gps'],
+                    'pickup_details_id'=>$pick,
+                    'delivery_details_id'=>$deli,
+                    'created_at'=>Carbon\Carbon::now()
+                ]);
+                foreach ($data['uscar_charges'] as $data)
+                {
+                    DB::table('charges')->insert([
+                        'carrier_id'=>$carr,
+                        'charge_type_id'=>$data['uscar_charge_type'],
+                        'description'=>$data['uscar_charge_descr'],
+                        'cost'=>$data['uscar_charge_cost'],
+                        'currency'=>$data['uscar_charge_currency'],
+                        'iva'=>$data['uscar_charge_iva'],
+                        'ret'=>$data['uscar_charge_isr'],
+                        'created_at'=>Carbon\Carbon::now(),
+                    ]);
+                }
+            }
+            if($data['SubSubServ2']==true)
+            {
+                $name = BusinessDirectory::where('id',$data['usbrok_entity'])->get()[0]->company;
+                $cardet = DB::table('carrier_details')->insertGetId([
+                    'name'=>$name,
+                    'description'=>'US Custom Broker',
+                    'id_service_detail'=>$data['id_service_detail'],
+                    'created_at'=>Carbon\Carbon::now()
+                ]);
+                $cost_det = DB::table('cost_details')->insertGetId([
+                    'freight_rate'=>$data['usbrok_freight'],
+                    'currency'=>$data['usbrok_currency'],
+                    'iva'=>$data['usbrok_iva'],
+                    'ret'=>$data['usbrok_isr'],
+                    'created_at'=>Carbon\Carbon::now()
+                ]);
+                $carrier = DB::table('carriers')->insertGetId([
+                    'service_id'=>$servid,
+                    'carrier_detail_id'=>$cardet,
+                    'business_directory_id'=>$data['usbrok_entity'],
+                    'cost_details_id'=>$cost_det,
+                    'arrival_requested'=>$data['usbrok_arrreq'],
+                    'cancelation_requested'=>$data['usbrok_qrrcan'],
+                    'created_at'=>Carbon\Carbon::now()
+                ]);
+                foreach ($data['usbrok_charges'] as $data)
+                {
+                    DB::table('charges')->insert([
+                        'carrier_id'=>$carr,
+                        'charge_type_id'=>$data['usbrok_charge_type'],
+                        'description'=>$data['usbrok_charge_descr'],
+                        'cost'=>$data['usbrokr_charge_cost'],
+                        'currency'=>$data['usbrok_charge_currency'],
+                        'iva'=>$data['usbrok_charge_iva'],
+                        'ret'=>$data['usbrok_charge_isr'],
+                        'created_at'=>Carbon\Carbon::now(),
+                    ]);
+                }
+            }
+            if($data['SubSubServ4']==true)
+            {
+                $name = BusinessDirectory::where('id',$data['mane_entity'])->get()[0]->company;
+                $cardet = DB::table('carrier_details')->insertGetId([
+                    'name'=>$name,
+                    'description'=>'Maneuvers',
+                    'id_service_detail'=>$data['id_service_detail'],
+                    'created_at'=>Carbon\Carbon::now()
+                ]);
+                $cost_det = DB::table('cost_details')->insertGetId([
+                    'freight_rate'=>$data['mane_freight'],
+                    'currency'=>$data['mane_currency'],
+                    'iva'=>$data['mane_iva'],
+                    'ret'=>$data['mane_isr'],
+                    'created_at'=>Carbon\Carbon::now()
+                ]);
+                $carrier = DB::table('carriers')->insertGetId([
+                    'service_id'=>$servid,
+                    'carrier_detail_id'=>$cardet,
+                    'business_directory_id'=>$data['mane_entity'],
+                    'cost_details_id'=>$cost_det,
+                    'created_at'=>Carbon\Carbon::now()
+                ]);
+                foreach ($data['mane_charges'] as $data)
+                {
+                    DB::table('charges')->insert([
+                        'carrier_id'=>$carr,
+                        'charge_type_id'=>$data['mane_charge_type'],
+                        'description'=>$data['mane_charge_descr'],
+                        'cost'=>$data['mane_charge_cost'],
+                        'currency'=>$data['mane_charge_currency'],
+                        'iva'=>$data['mane_charge_iva'],
+                        'ret'=>$data['mane_charge_isr'],
+                        'created_at'=>Carbon\Carbon::now(),
+                    ]);
+                }
+            }
+        }
+        if($data['SubServ2'] == true)
+        {
+            if($data['SubSubServ3']==true)
+            {
+                $name = BusinessDirectory::where('id',$data['trans_entity'])->get()[0]->company;
+                $cardet = DB::table('carrier_details')->insertGetId([
+                    'name'=>$name,
+                    'description'=>'Transfer',
+                    'id_service_detail'=>$data['id_service_detail'],
+                    'created_at'=>Carbon\Carbon::now()
+                ]);
+                $cost_det = DB::table('cost_details')->insertGetId([
+                    'freight_rate'=>$data['trans_freight'],
+                    'currency'=>$data['trans_currency'],
+                    'iva'=>$data['trans_iva'],
+                    'ret'=>$data['trans_isr'],
+                    'gps_link'=>$data['trans_gps'],
+                    'created_at'=>Carbon\Carbon::now()
+                ]);
+                $pick = DB::table('pickup_details')->insertGetId([
+                    'real_pickup_date'=>$data['trans_pick_date'],
+                    'in_time'=>$data['trans_pick_intime'],
+                    'out_time'=>$data['trans_pick_outime'],
+                    'detention_hours'=>$data['trans_pick_deten'],
+                    'created_at'=>Carbon\Carbon::now()
+                ]);
+                $deli = DB::table('delivery_details')->insertGetId([
+                    'real_delivery_date'=>$data['trans_deli_date'],
+                    'delivery_in_time'=>$data['trans_deli_intime'],
+                    'delivery_out_time'=>$data['trans_deli_outime'],
+                    'delivery_detention_hours'=>$data['trans_deli_deten'],
+                    'created_at'=>Carbon\Carbon::now()
+                ]);
+                $carrier = DB::table('carriers')->insertGetId([
+                    'service_id'=>$servid,
+                    'carrier_detail_id'=>$cardet,
+                    'business_directory_id'=>$data['trans_entity'],
+                    'cost_details_id'=>$cost_det,
+                    'equipment_details_id'=>$equip,
+                    'gps_link'=>$data['trans_gps'],
+                    'port_of_entry'=>$data['trans_port'],
+                    'pickup_details_id'=>$pick,
+                    'delivery_details_id'=>$deli,
+                    'created_at'=>Carbon\Carbon::now()
+                ]);
+                foreach ($data['trans_charges'] as $data)
+                {
+                    DB::table('charges')->insert([
+                        'carrier_id'=>$carr,
+                        'charge_type_id'=>$data['trans_charge_type'],
+                        'description'=>$data['trans_charge_descr'],
+                        'cost'=>$data['trans_charge_cost'],
+                        'currency'=>$data['trans_charge_currency'],
+                        'iva'=>$data['trans_charge_iva'],
+                        'ret'=>$data['trans_charge_isr'],
+                        'created_at'=>Carbon\Carbon::now(),
+                    ]);
+                }
+            }
+            if($data['SubSubServ5']==true)
+            {
+                $name = BusinessDirectory::where('id', $data['mxcar_entity'])->get()[0]->company;
+                $cardet = DB::table('carrier_details')->insertGetId([
+                    'name' => $name,
+                    'description' => 'MX Carrier',
+                    'id_service_detail' => $data['id_service_detail'],
+                    'created_at' => Carbon\Carbon::now()
+                ]);
+                $cost_det = DB::table('cost_details')->insertGetId([
+                    'freight_rate' => $data['mxcar_freight'],
+                    'currency' => $data['mxcar_currency'],
+                    'iva' => $data['mxcar_iva'],
+                    'ret' => $data['mxcar_isr'],
+                    'gps_link' => $data['mxcar_gps'],
+                    'created_at' => Carbon\Carbon::now()
+                ]);
+                $equip = DB::table('equipment_details')->insertGetId([
+                    'equipment' => $data['mxcar_equipment'],
+                    'truck_number' => $data['mxcar_truck'],
+                    'truck_plates' => $data['mxcar_truck_plat'],
+                    'trailer_number' => $data['mxcar_trailer'],
+                    'trailer_plates' => $data['mxcar_trailer_plat'],
+                    'created_at' => Carbon\Carbon::now()
+                ]);
+                $pick = DB::table('pickup_details')->insertGetId([
+                    'real_pickup_date' => $data['mxcar_pick_date'],
+                    'in_time' => $data['mxcar_pick_intime'],
+                    'out_time' => $data['mxcar_pick_outime'],
+                    'detention_hours' => $data['mxcar_pick_deten'],
+                    'created_at' => Carbon\Carbon::now()
+                ]);
+                $deli = DB::table('delivery_details')->insertGetId([
+                    'real_delivery_date' => $data['mxcar_deli_date'],
+                    'delivery_in_time' => $data['mxcar_deli_intime'],
+                    'delivery_out_time' => $data['mxcar_deli_outime'],
+                    'delivery_detention_hours' => $data['mxcar_deli_deten'],
+                    'created_at' => Carbon\Carbon::now()
+                ]);
+                $carrier = DB::table('carriers')->insertGetId([
+                    'service_id' => $servid,
+                    'carrier_detail_id' => $cardet,
+                    'business_directory_id' => $data['mxcar_entity'],
+                    'cost_details_id' => $cost_det,
+                    'equipment_details_id' => $equip,
+                    'gps_link' => $data['mxcar_gps'],
+                    'pickup_details_id' => $pick,
+                    'delivery_details_id' => $deli,
+                    'created_at' => Carbon\Carbon::now()
+                ]);
+                foreach ($data['mxcar_charges'] as $data) {
+                    DB::table('charges')->insert([
+                        'carrier_id' => $carr,
+                        'charge_type_id' => $data['mxcar_charge_type'],
+                        'description' => $data['mxcar_charge_descr'],
+                        'cost' => $data['mxcar_charge_cost'],
+                        'currency' => $data['mxcar_charge_currency'],
+                        'iva' => $data['mxcar_charge_iva'],
+                        'ret' => $data['mxcar_charge_isr'],
+                        'created_at' => Carbon\Carbon::now(),
+                    ]);
+                }
+            }
+        }
+        if($data['SubServ3'] == true)
+        {
+            if($data['SubSubServ1']==true)
+            {
+                $name = BusinessDirectory::where('id',$data['uscar_entity'])->get()[0]->company;
+                $cardet = DB::table('carrier_details')->insertGetId([
+                    'name'=>$name,
+                    'description'=>'US Carrier',
+                    'id_service_detail'=>$data['id_service_detail'],
+                    'created_at'=>Carbon\Carbon::now()
+                ]);
+                $cost_det = DB::table('cost_details')->insertGetId([
+                    'freight_rate'=>$data['uscar_freight'],
+                    'currency'=>$data['uscar_currency'],
+                    'iva'=>$data['uscar_iva'],
+                    'ret'=>$data['uscar_isr'],
+                    'gps_link'=>$data['uscar_gps'],
+                    'created_at'=>Carbon\Carbon::now()
+                ]);
+                $equip = DB::table('equipment_details')->insertGetId([
+                    'equipment'=>$data['uscar_equipment'],
+                    'truck_number'=>$data['uscar_truck'],
+                    'truck_plates'=>$data['uscar_truck_plat'],
+                    'trailer_number'=>$data['uscar_trailer'],
+                    'trailer_plates'=>$data['uscar_trailer_plat'],
+                    'created_at'=>Carbon\Carbon::now()
+                ]);
+                $pick = DB::table('pickup_details')->insertGetId([
+                    'real_pickup_date'=>$data['uscar_pick_date'],
+                    'in_time'=>$data['uscar_pick_intime'],
+                    'out_time'=>$data['uscar_pick_outime'],
+                    'detention_hours'=>$data['uscar_pick_deten'],
+                    'created_at'=>Carbon\Carbon::now()
+                ]);
+                $deli = DB::table('delivery_details')->insertGetId([
+                    'real_delivery_date'=>$data['uscar_deli_date'],
+                    'delivery_in_time'=>$data['uscar_deli_intime'],
+                    'delivery_out_time'=>$data['uscar_deli_outime'],
+                    'delivery_detention_hours'=>$data['uscar_deli_deten'],
+                    'created_at'=>Carbon\Carbon::now()
+                ]);
+                $carrier = DB::table('carriers')->insertGetId([
+                    'service_id'=>$servid,
+                    'carrier_detail_id'=>$cardet,
+                    'business_directory_id'=>$data['uscar_entity'],
+                    'cost_details_id'=>$cost_det,
+                    'equipment_details_id'=>$equip,
+                    'gps_link'=>$data['uscar_gps'],
+                    'pickup_details_id'=>$pick,
+                    'delivery_details_id'=>$deli,
+                    'created_at'=>Carbon\Carbon::now()
+                ]);
+                foreach ($data['uscar_charges'] as $data)
+                {
+                    DB::table('charges')->insert([
+                        'carrier_id'=>$carr,
+                        'charge_type_id'=>$data['uscar_charge_type'],
+                        'description'=>$data['uscar_charge_descr'],
+                        'cost'=>$data['uscar_charge_cost'],
+                        'currency'=>$data['uscar_charge_currency'],
+                        'iva'=>$data['uscar_charge_iva'],
+                        'ret'=>$data['uscar_charge_isr'],
+                        'created_at'=>Carbon\Carbon::now(),
+                    ]);
+                }
+            }
+            if($data['SubSubServ2']==true)
+            {
+                $name = BusinessDirectory::where('id',$data['usbrok_entity'])->get()[0]->company;
+                $cardet = DB::table('carrier_details')->insertGetId([
+                    'name'=>$name,
+                    'description'=>'US Custom Broker',
+                    'id_service_detail'=>$data['id_service_detail'],
+                    'created_at'=>Carbon\Carbon::now()
+                ]);
+                $cost_det = DB::table('cost_details')->insertGetId([
+                    'freight_rate'=>$data['usbrok_freight'],
+                    'currency'=>$data['usbrok_currency'],
+                    'iva'=>$data['usbrok_iva'],
+                    'ret'=>$data['usbrok_isr'],
+                    'created_at'=>Carbon\Carbon::now()
+                ]);
+                $carrier = DB::table('carriers')->insertGetId([
+                    'service_id'=>$servid,
+                    'carrier_detail_id'=>$cardet,
+                    'business_directory_id'=>$data['usbrok_entity'],
+                    'cost_details_id'=>$cost_det,
+                    'arrival_requested'=>$data['usbrok_arrreq'],
+                    'cancelation_requested'=>$data['usbrok_qrrcan'],
+                    'created_at'=>Carbon\Carbon::now()
+                ]);
+                foreach ($data['usbrok_charges'] as $data)
+                {
+                    DB::table('charges')->insert([
+                        'carrier_id'=>$carr,
+                        'charge_type_id'=>$data['usbrok_charge_type'],
+                        'description'=>$data['usbrok_charge_descr'],
+                        'cost'=>$data['usbrokr_charge_cost'],
+                        'currency'=>$data['usbrok_charge_currency'],
+                        'iva'=>$data['usbrok_charge_iva'],
+                        'ret'=>$data['usbrok_charge_isr'],
+                        'created_at'=>Carbon\Carbon::now(),
+                    ]);
+                }
+            }
+            if($data['SubSubServ3']==true)
+            {
+                $name = BusinessDirectory::where('id',$data['trans_entity'])->get()[0]->company;
+                $cardet = DB::table('carrier_details')->insertGetId([
+                    'name'=>$name,
+                    'description'=>'Transfer',
+                    'id_service_detail'=>$data['id_service_detail'],
+                    'created_at'=>Carbon\Carbon::now()
+                ]);
+                $cost_det = DB::table('cost_details')->insertGetId([
+                    'freight_rate'=>$data['trans_freight'],
+                    'currency'=>$data['trans_currency'],
+                    'iva'=>$data['trans_iva'],
+                    'ret'=>$data['trans_isr'],
+                    'gps_link'=>$data['trans_gps'],
+                    'created_at'=>Carbon\Carbon::now()
+                ]);
+                $pick = DB::table('pickup_details')->insertGetId([
+                    'real_pickup_date'=>$data['trans_pick_date'],
+                    'in_time'=>$data['trans_pick_intime'],
+                    'out_time'=>$data['trans_pick_outime'],
+                    'detention_hours'=>$data['trans_pick_deten'],
+                    'created_at'=>Carbon\Carbon::now()
+                ]);
+                $deli = DB::table('delivery_details')->insertGetId([
+                    'real_delivery_date'=>$data['trans_deli_date'],
+                    'delivery_in_time'=>$data['trans_deli_intime'],
+                    'delivery_out_time'=>$data['trans_deli_outime'],
+                    'delivery_detention_hours'=>$data['trans_deli_deten'],
+                    'created_at'=>Carbon\Carbon::now()
+                ]);
+                $carrier = DB::table('carriers')->insertGetId([
+                    'service_id'=>$servid,
+                    'carrier_detail_id'=>$cardet,
+                    'business_directory_id'=>$data['trans_entity'],
+                    'cost_details_id'=>$cost_det,
+                    'equipment_details_id'=>$equip,
+                    'gps_link'=>$data['trans_gps'],
+                    'port_of_entry'=>$data['trans_port'],
+                    'pickup_details_id'=>$pick,
+                    'delivery_details_id'=>$deli,
+                    'created_at'=>Carbon\Carbon::now()
+                ]);
+                foreach ($data['trans_charges'] as $data)
+                {
+                    DB::table('charges')->insert([
+                        'carrier_id'=>$carr,
+                        'charge_type_id'=>$data['trans_charge_type'],
+                        'description'=>$data['trans_charge_descr'],
+                        'cost'=>$data['trans_charge_cost'],
+                        'currency'=>$data['trans_charge_currency'],
+                        'iva'=>$data['trans_charge_iva'],
+                        'ret'=>$data['trans_charge_isr'],
+                        'created_at'=>Carbon\Carbon::now(),
+                    ]);
+                }
+            }
+            if($data['SubSubServ4']==true)
+            {
+                $name = BusinessDirectory::where('id',$data['mane_entity'])->get()[0]->company;
+                $cardet = DB::table('carrier_details')->insertGetId([
+                    'name'=>$name,
+                    'description'=>'Maneuvers',
+                    'id_service_detail'=>$data['id_service_detail'],
+                    'created_at'=>Carbon\Carbon::now()
+                ]);
+                $cost_det = DB::table('cost_details')->insertGetId([
+                    'freight_rate'=>$data['mane_freight'],
+                    'currency'=>$data['mane_currency'],
+                    'iva'=>$data['mane_iva'],
+                    'ret'=>$data['mane_isr'],
+                    'created_at'=>Carbon\Carbon::now()
+                ]);
+                $carrier = DB::table('carriers')->insertGetId([
+                    'service_id'=>$servid,
+                    'carrier_detail_id'=>$cardet,
+                    'business_directory_id'=>$data['mane_entity'],
+                    'cost_details_id'=>$cost_det,
+                    'created_at'=>Carbon\Carbon::now()
+                ]);
+                foreach ($data['mane_charges'] as $data)
+                {
+                    DB::table('charges')->insert([
+                        'carrier_id'=>$carr,
+                        'charge_type_id'=>$data['mane_charge_type'],
+                        'description'=>$data['mane_charge_descr'],
+                        'cost'=>$data['mane_charge_cost'],
+                        'currency'=>$data['mane_charge_currency'],
+                        'iva'=>$data['mane_charge_iva'],
+                        'ret'=>$data['mane_charge_isr'],
+                        'created_at'=>Carbon\Carbon::now(),
+                    ]);
+                }
+            }
+            if($data['SubSubServ5']==true)
+            {
+                $name = BusinessDirectory::where('id', $data['mxcar_entity'])->get()[0]->company;
+                $cardet = DB::table('carrier_details')->insertGetId([
+                    'name' => $name,
+                    'description' => 'MX Carrier',
+                    'id_service_detail' => $data['id_service_detail'],
+                    'created_at' => Carbon\Carbon::now()
+                ]);
+                $cost_det = DB::table('cost_details')->insertGetId([
+                    'freight_rate' => $data['mxcar_freight'],
+                    'currency' => $data['mxcar_currency'],
+                    'iva' => $data['mxcar_iva'],
+                    'ret' => $data['mxcar_isr'],
+                    'gps_link' => $data['mxcar_gps'],
+                    'created_at' => Carbon\Carbon::now()
+                ]);
+                $equip = DB::table('equipment_details')->insertGetId([
+                    'equipment' => $data['mxcar_equipment'],
+                    'truck_number' => $data['mxcar_truck'],
+                    'truck_plates' => $data['mxcar_truck_plat'],
+                    'trailer_number' => $data['mxcar_trailer'],
+                    'trailer_plates' => $data['mxcar_trailer_plat'],
+                    'created_at' => Carbon\Carbon::now()
+                ]);
+                $pick = DB::table('pickup_details')->insertGetId([
+                    'real_pickup_date' => $data['mxcar_pick_date'],
+                    'in_time' => $data['mxcar_pick_intime'],
+                    'out_time' => $data['mxcar_pick_outime'],
+                    'detention_hours' => $data['mxcar_pick_deten'],
+                    'created_at' => Carbon\Carbon::now()
+                ]);
+                $deli = DB::table('delivery_details')->insertGetId([
+                    'real_delivery_date' => $data['mxcar_deli_date'],
+                    'delivery_in_time' => $data['mxcar_deli_intime'],
+                    'delivery_out_time' => $data['mxcar_deli_outime'],
+                    'delivery_detention_hours' => $data['mxcar_deli_deten'],
+                    'created_at' => Carbon\Carbon::now()
+                ]);
+                $carrier = DB::table('carriers')->insertGetId([
+                    'service_id' => $servid,
+                    'carrier_detail_id' => $cardet,
+                    'business_directory_id' => $data['mxcar_entity'],
+                    'cost_details_id' => $cost_det,
+                    'equipment_details_id' => $equip,
+                    'gps_link' => $data['mxcar_gps'],
+                    'pickup_details_id' => $pick,
+                    'delivery_details_id' => $deli,
+                    'created_at' => Carbon\Carbon::now()
+                ]);
+                foreach ($data['mxcar_charges'] as $data) {
+                    DB::table('charges')->insert([
+                        'carrier_id' => $carr,
+                        'charge_type_id' => $data['mxcar_charge_type'],
+                        'description' => $data['mxcar_charge_descr'],
+                        'cost' => $data['mxcar_charge_cost'],
+                        'currency' => $data['mxcar_charge_currency'],
+                        'iva' => $data['mxcar_charge_iva'],
+                        'ret' => $data['mxcar_charge_isr'],
+                        'created_at' => Carbon\Carbon::now(),
+                    ]);
+                }
+            }
+        }
+        if($data['SubServ4'] == true)
+        {
+            if($data['SubSubServ1']==true)
+            {
+                $name = BusinessDirectory::where('id',$data['uscar_entity'])->get()[0]->company;
+                $cardet = DB::table('carrier_details')->insertGetId([
+                    'name'=>$name,
+                    'description'=>'US Carrier',
+                    'id_service_detail'=>$data['id_service_detail'],
+                    'created_at'=>Carbon\Carbon::now()
+                ]);
+                $cost_det = DB::table('cost_details')->insertGetId([
+                    'freight_rate'=>$data['uscar_freight'],
+                    'currency'=>$data['uscar_currency'],
+                    'iva'=>$data['uscar_iva'],
+                    'ret'=>$data['uscar_isr'],
+                    'gps_link'=>$data['uscar_gps'],
+                    'created_at'=>Carbon\Carbon::now()
+                ]);
+                $equip = DB::table('equipment_details')->insertGetId([
+                    'equipment'=>$data['uscar_equipment'],
+                    'truck_number'=>$data['uscar_truck'],
+                    'truck_plates'=>$data['uscar_truck_plat'],
+                    'trailer_number'=>$data['uscar_trailer'],
+                    'trailer_plates'=>$data['uscar_trailer_plat'],
+                    'created_at'=>Carbon\Carbon::now()
+                ]);
+                $pick = DB::table('pickup_details')->insertGetId([
+                    'real_pickup_date'=>$data['uscar_pick_date'],
+                    'in_time'=>$data['uscar_pick_intime'],
+                    'out_time'=>$data['uscar_pick_outime'],
+                    'detention_hours'=>$data['uscar_pick_deten'],
+                    'created_at'=>Carbon\Carbon::now()
+                ]);
+                $deli = DB::table('delivery_details')->insertGetId([
+                    'real_delivery_date'=>$data['uscar_deli_date'],
+                    'delivery_in_time'=>$data['uscar_deli_intime'],
+                    'delivery_out_time'=>$data['uscar_deli_outime'],
+                    'delivery_detention_hours'=>$data['uscar_deli_deten'],
+                    'created_at'=>Carbon\Carbon::now()
+                ]);
+                $carrier = DB::table('carriers')->insertGetId([
+                    'service_id'=>$servid,
+                    'carrier_detail_id'=>$cardet,
+                    'business_directory_id'=>$data['uscar_entity'],
+                    'cost_details_id'=>$cost_det,
+                    'equipment_details_id'=>$equip,
+                    'gps_link'=>$data['uscar_gps'],
+                    'pickup_details_id'=>$pick,
+                    'delivery_details_id'=>$deli,
+                    'created_at'=>Carbon\Carbon::now()
+                ]);
+                foreach ($data['uscar_charges'] as $data)
+                {
+                    DB::table('charges')->insert([
+                        'carrier_id'=>$carr,
+                        'charge_type_id'=>$data['uscar_charge_type'],
+                        'description'=>$data['uscar_charge_descr'],
+                        'cost'=>$data['uscar_charge_cost'],
+                        'currency'=>$data['uscar_charge_currency'],
+                        'iva'=>$data['uscar_charge_iva'],
+                        'ret'=>$data['uscar_charge_isr'],
+                        'created_at'=>Carbon\Carbon::now(),
+                    ]);
+                }
+            }
+            if($data['SubSubServ2']==true)
+            {
+                $name = BusinessDirectory::where('id',$data['usbrok_entity'])->get()[0]->company;
+                $cardet = DB::table('carrier_details')->insertGetId([
+                    'name'=>$name,
+                    'description'=>'US Custom Broker',
+                    'id_service_detail'=>$data['id_service_detail'],
+                    'created_at'=>Carbon\Carbon::now()
+                ]);
+                $cost_det = DB::table('cost_details')->insertGetId([
+                    'freight_rate'=>$data['usbrok_freight'],
+                    'currency'=>$data['usbrok_currency'],
+                    'iva'=>$data['usbrok_iva'],
+                    'ret'=>$data['usbrok_isr'],
+                    'created_at'=>Carbon\Carbon::now()
+                ]);
+                $carrier = DB::table('carriers')->insertGetId([
+                    'service_id'=>$servid,
+                    'carrier_detail_id'=>$cardet,
+                    'business_directory_id'=>$data['usbrok_entity'],
+                    'cost_details_id'=>$cost_det,
+                    'arrival_requested'=>$data['usbrok_arrreq'],
+                    'cancelation_requested'=>$data['usbrok_qrrcan'],
+                    'created_at'=>Carbon\Carbon::now()
+                ]);
+                foreach ($data['usbrok_charges'] as $data)
+                {
+                    DB::table('charges')->insert([
+                        'carrier_id'=>$carr,
+                        'charge_type_id'=>$data['usbrok_charge_type'],
+                        'description'=>$data['usbrok_charge_descr'],
+                        'cost'=>$data['usbrokr_charge_cost'],
+                        'currency'=>$data['usbrok_charge_currency'],
+                        'iva'=>$data['usbrok_charge_iva'],
+                        'ret'=>$data['usbrok_charge_isr'],
+                        'created_at'=>Carbon\Carbon::now(),
+                    ]);
+                }
+            }
+            if($data['SubSubServ3']==true)
+            {
+                $name = BusinessDirectory::where('id',$data['trans_entity'])->get()[0]->company;
+                $cardet = DB::table('carrier_details')->insertGetId([
+                    'name'=>$name,
+                    'description'=>'Transfer',
+                    'id_service_detail'=>$data['id_service_detail'],
+                    'created_at'=>Carbon\Carbon::now()
+                ]);
+                $cost_det = DB::table('cost_details')->insertGetId([
+                    'freight_rate'=>$data['trans_freight'],
+                    'currency'=>$data['trans_currency'],
+                    'iva'=>$data['trans_iva'],
+                    'ret'=>$data['trans_isr'],
+                    'gps_link'=>$data['trans_gps'],
+                    'created_at'=>Carbon\Carbon::now()
+                ]);
+                $pick = DB::table('pickup_details')->insertGetId([
+                    'real_pickup_date'=>$data['trans_pick_date'],
+                    'in_time'=>$data['trans_pick_intime'],
+                    'out_time'=>$data['trans_pick_outime'],
+                    'detention_hours'=>$data['trans_pick_deten'],
+                    'created_at'=>Carbon\Carbon::now()
+                ]);
+                $deli = DB::table('delivery_details')->insertGetId([
+                    'real_delivery_date'=>$data['trans_deli_date'],
+                    'delivery_in_time'=>$data['trans_deli_intime'],
+                    'delivery_out_time'=>$data['trans_deli_outime'],
+                    'delivery_detention_hours'=>$data['trans_deli_deten'],
+                    'created_at'=>Carbon\Carbon::now()
+                ]);
+                $carrier = DB::table('carriers')->insertGetId([
+                    'service_id'=>$servid,
+                    'carrier_detail_id'=>$cardet,
+                    'business_directory_id'=>$data['trans_entity'],
+                    'cost_details_id'=>$cost_det,
+                    'equipment_details_id'=>$equip,
+                    'gps_link'=>$data['trans_gps'],
+                    'port_of_entry'=>$data['trans_port'],
+                    'pickup_details_id'=>$pick,
+                    'delivery_details_id'=>$deli,
+                    'created_at'=>Carbon\Carbon::now()
+                ]);
+                foreach ($data['trans_charges'] as $data)
+                {
+                    DB::table('charges')->insert([
+                        'carrier_id'=>$carr,
+                        'charge_type_id'=>$data['trans_charge_type'],
+                        'description'=>$data['trans_charge_descr'],
+                        'cost'=>$data['trans_charge_cost'],
+                        'currency'=>$data['trans_charge_currency'],
+                        'iva'=>$data['trans_charge_iva'],
+                        'ret'=>$data['trans_charge_isr'],
+                        'created_at'=>Carbon\Carbon::now(),
+                    ]);
+                }
+            }
+            if($data['SubSubServ4']==true)
+            {
+                $name = BusinessDirectory::where('id',$data['mane_entity'])->get()[0]->company;
+                $cardet = DB::table('carrier_details')->insertGetId([
+                    'name'=>$name,
+                    'description'=>'Maneuvers',
+                    'id_service_detail'=>$data['id_service_detail'],
+                    'created_at'=>Carbon\Carbon::now()
+                ]);
+                $cost_det = DB::table('cost_details')->insertGetId([
+                    'freight_rate'=>$data['mane_freight'],
+                    'currency'=>$data['mane_currency'],
+                    'iva'=>$data['mane_iva'],
+                    'ret'=>$data['mane_isr'],
+                    'created_at'=>Carbon\Carbon::now()
+                ]);
+                $carrier = DB::table('carriers')->insertGetId([
+                    'service_id'=>$servid,
+                    'carrier_detail_id'=>$cardet,
+                    'business_directory_id'=>$data['mane_entity'],
+                    'cost_details_id'=>$cost_det,
+                    'created_at'=>Carbon\Carbon::now()
+                ]);
+                foreach ($data['mane_charges'] as $data)
+                {
+                    DB::table('charges')->insert([
+                        'carrier_id'=>$carr,
+                        'charge_type_id'=>$data['mane_charge_type'],
+                        'description'=>$data['mane_charge_descr'],
+                        'cost'=>$data['mane_charge_cost'],
+                        'currency'=>$data['mane_charge_currency'],
+                        'iva'=>$data['mane_charge_iva'],
+                        'ret'=>$data['mane_charge_isr'],
+                        'created_at'=>Carbon\Carbon::now(),
+                    ]);
+                }
+            }
+            if($data['SubSubServ5']==true)
+            {
+                $name = BusinessDirectory::where('id', $data['mxcar_entity'])->get()[0]->company;
+                $cardet = DB::table('carrier_details')->insertGetId([
+                    'name' => $name,
+                    'description' => 'MX Carrier',
+                    'id_service_detail' => $data['id_service_detail'],
+                    'created_at' => Carbon\Carbon::now()
+                ]);
+                $cost_det = DB::table('cost_details')->insertGetId([
+                    'freight_rate' => $data['mxcar_freight'],
+                    'currency' => $data['mxcar_currency'],
+                    'iva' => $data['mxcar_iva'],
+                    'ret' => $data['mxcar_isr'],
+                    'gps_link' => $data['mxcar_gps'],
+                    'created_at' => Carbon\Carbon::now()
+                ]);
+                $equip = DB::table('equipment_details')->insertGetId([
+                    'equipment' => $data['mxcar_equipment'],
+                    'truck_number' => $data['mxcar_truck'],
+                    'truck_plates' => $data['mxcar_truck_plat'],
+                    'trailer_number' => $data['mxcar_trailer'],
+                    'trailer_plates' => $data['mxcar_trailer_plat'],
+                    'created_at' => Carbon\Carbon::now()
+                ]);
+                $pick = DB::table('pickup_details')->insertGetId([
+                    'real_pickup_date' => $data['mxcar_pick_date'],
+                    'in_time' => $data['mxcar_pick_intime'],
+                    'out_time' => $data['mxcar_pick_outime'],
+                    'detention_hours' => $data['mxcar_pick_deten'],
+                    'created_at' => Carbon\Carbon::now()
+                ]);
+                $deli = DB::table('delivery_details')->insertGetId([
+                    'real_delivery_date' => $data['mxcar_deli_date'],
+                    'delivery_in_time' => $data['mxcar_deli_intime'],
+                    'delivery_out_time' => $data['mxcar_deli_outime'],
+                    'delivery_detention_hours' => $data['mxcar_deli_deten'],
+                    'created_at' => Carbon\Carbon::now()
+                ]);
+                $carrier = DB::table('carriers')->insertGetId([
+                    'service_id' => $servid,
+                    'carrier_detail_id' => $cardet,
+                    'business_directory_id' => $data['mxcar_entity'],
+                    'cost_details_id' => $cost_det,
+                    'equipment_details_id' => $equip,
+                    'gps_link' => $data['mxcar_gps'],
+                    'pickup_details_id' => $pick,
+                    'delivery_details_id' => $deli,
+                    'created_at' => Carbon\Carbon::now()
+                ]);
+                foreach ($data['mxcar_charges'] as $data) {
+                    DB::table('charges')->insert([
+                        'carrier_id' => $carr,
+                        'charge_type_id' => $data['mxcar_charge_type'],
+                        'description' => $data['mxcar_charge_descr'],
+                        'cost' => $data['mxcar_charge_cost'],
+                        'currency' => $data['mxcar_charge_currency'],
+                        'iva' => $data['mxcar_charge_iva'],
+                        'ret' => $data['mxcar_charge_isr'],
+                        'created_at' => Carbon\Carbon::now(),
+                    ]);
+                }
             }
         }
         DB::statement('SET FOREIGN_KEY_CHECKS=1');
