@@ -114,7 +114,7 @@ class CreateShipment extends Component implements HasForms
                                     ->maxLength(7)->columnSpan(4)->readOnly(),
                                     TextInput::make('pickup_number')
                                     ->label('Pickup No.')
-                                    ->maxLength(255)->columnSpan(2),
+                                    ->maxLength(255)->columnSpan(2)->default(0),
                                     Select::make('shipment_status')
                                     ->label('Shipment Status')
                                     ->options(ShipmentStatus::all()->pluck('name','id'))->columnSpan(4),
