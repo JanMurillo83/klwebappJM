@@ -94,9 +94,10 @@ class CreateShipment extends Component implements HasForms
                                     ->afterStateUpdated(function (Get $get,Set $set) {
                                         $cust = $get('business_directory_id');
                                         $bilref = BusinessDirectory::where('id',$cust)->first();
-                                        $serv = count(Service::where('business_directory_id',$get('business_directory_id'))->get()) + 1;
+                                        $custnum= $bilref->custom_start_number ?? 0;
+                                        $serv = count(Service::where('business_directory_id',$get('business_directory_id'))->get()) + $custnum + 1;
                                         $kl = 'KL'.$bilref->billing_reference.$serv;
-                                        $set('billing_customer_reference',$kl);
+                                        $set('kl_reference',$kl);
                                         $ex_rat = ExchangeRate::latest()->first();
                                         $set('rate_to_customer',$ex_rat->exchange_rate ?? 0);
                                     }),
@@ -111,7 +112,7 @@ class CreateShipment extends Component implements HasForms
                                     ->options(['MXN'=>'MXN','USD'=>'USD'])->columnSpan(3),
                                     TextInput::make('billing_customer_reference')
                                     ->label('Billing C. Ref.')
-                                    ->maxLength(7)->columnSpan(4)->readOnly(),
+                                    ->maxLength(7)->columnSpan(4),
                                     TextInput::make('pickup_number')
                                     ->label('Pickup No.')
                                     ->maxLength(255)->columnSpan(2)->default(0),
@@ -868,45 +869,40 @@ class CreateShipment extends Component implements HasForms
                                         Action::make('Cancel')
                                         ->color(Color::Red)
                                         ->button()
-                                        /*->url(function(){
-                                            return route('business-directory.index');
-                                        })*/
-                                        ->url('dash')
+                                        ->url('/')
                                         ->size(ActionSize::ExtraLarge)
                                     ])
                                 ])->columnSpanFull()
                                 //----------------------------------------------------------------------------
                             ])->extraAttributes(['style'=>'width:65rem !important; margin:0px !important;padding:0px !important']),
                         Section::make([
-                            Placeholder::make('Customer:')->reactive()->content(function(Get $get){$va = $get('business_directory_id'); if($va == null) return 'N/A'; else{ $val = BusinessDirectory::where('id',$va)->get()[0]->company;return $val;}})->inlineLabel(),
-                            Placeholder::make('Rate to Customer:')
-                            ->content(function(Get $get){
-                                $va = $get('rate_to_customer');
-                                if($va == null) return 'N/A';
-                                else return $va;
-                            })->inlineLabel()->extraAttributes(['style'=>'gap:0.1rem !important;margin:0rem !important;']),
-                            Placeholder::make('Currency:')->content(function(Get $get){$va = $get('currency'); if($va == null) return 'N/A'; else return $va;})->inlineLabel(),
-                            Placeholder::make('Billing Ref:')->content(function(Get $get){$va = $get('billing_customer_reference'); if($va == null) return 'N/A'; else return $va;})->inlineLabel(),
-                            Placeholder::make('Pickup No:')->content(function(Get $get){$va = $get('pickup_number'); if($va == null) return 'N/A'; else return $va;})->inlineLabel(),
-                            Placeholder::make('Shipment Status:')->content(function(Get $get){$va = $get('shipment_status'); if($va == null) return 'N/A'; else return $va;})->inlineLabel(),
-                            Placeholder::make('Shipment Type:')->content(function(Get $get){$va = $get('id_service_detail'); if($va == null) return 'N/A'; else return $va;})->inlineLabel(),
-                            Placeholder::make('Expedited:')->content(function(Get $get){$va = $get('expedited'); if($va == null) return 'N/A'; else return $va;})->inlineLabel(),
-                            Placeholder::make('Hazmat:')->content(function(Get $get){$va = $get('hazmat'); if($va == null) return 'N/A'; else return $va;})->inlineLabel(),
-                            Placeholder::make('Team Driver:')->content(function(Get $get){$va = $get('team_driver'); if($va == null) return 'N/A'; else return $va;})->inlineLabel(),
-                            Placeholder::make('Round Trip:')->content(function(Get $get){$va = $get('round_trip'); if($va == null) return 'N/A'; else return $va;})->inlineLabel(),
-                            Placeholder::make('UN Number:')->content(function(Get $get){$va = $get('un_number'); if($va == null) return 'N/A'; else return $va;})->inlineLabel(),
-                            Placeholder::make('Handling Type:')->content(function(Get $get){$va = $get('hazmat'); if($va == null) return 'N/A'; else return $va;})->inlineLabel(),
-                            Placeholder::make('Material Type:')->content(function(Get $get){$va = $get('hazmat'); if($va == null) return 'N/A'; else return $va;})->inlineLabel(),
-                            Placeholder::make('Class:')->content('N/A')->inlineLabel(),
-                            Placeholder::make('Count:')->content('N/A')->inlineLabel(),
-                            Placeholder::make('Stackable:')->content('No')->inlineLabel(),
-                            Placeholder::make('Weight:')->content('N/A')->inlineLabel(),
-                            Placeholder::make('Length:')->content('N/A')->inlineLabel(),
-                            Placeholder::make('Width:')->content('N/A')->inlineLabel(),
-                            Placeholder::make('Height:')->content('N/A')->inlineLabel(),
-                            Placeholder::make('Total Yards:')->content('N/A')->inlineLabel(),
-                        ])->extraAttributes(['style'=>'width:35rem !important;gap:0.1rem !important'])
-                        ->heading('Review')->columnSpanFull()->compact()
+                            Fieldset::make('Review')
+                            ->schema([
+                                Group::make([
+                                    TextInput::make('kl_reference')->label('Reference:')->readOnly()
+                                    ->columnSpanFull(),
+                                    Section::make()
+                                    ->schema([
+                                        Actions::make([
+                                            Action::make('Preview')->button()->color(Color::Red)->size(ActionSize::ExtraLarge),
+                                        ])->columnSpanFull()->fullWidth(),
+                                        Actions::make([
+                                            Action::make('View Charges')->button()->color(Color::Red)->size(ActionSize::ExtraLarge),
+                                        ])->columnSpanFull()->fullWidth()
+                                    ]),
+                                    Section::make()
+                                        ->schema([
+                                            Actions::make([
+                                                Action::make('Save')->button()->color(Color::hex('#080808'))->size(ActionSize::ExtraLarge),
+                                            ])->columnSpanFull()->fullWidth(),
+                                            Actions::make([
+                                                Action::make('Cancel')->button()->color(Color::Red)->size(ActionSize::ExtraLarge),
+                                            ])->columnSpanFull()->fullWidth()
+                                        ])
+                                ])->columnSpanFull(),
+                            ])
+                        ])->extraAttributes(['style'=>'width:17rem !important;gap:0.1rem !important'])
+                        ->heading('')->columnSpanFull()->compact()
                     ])->columnSpanFull(),
             ])
             ->statePath('data')
@@ -1852,7 +1848,7 @@ class CreateShipment extends Component implements HasForms
         ->success()
         ->persistent()
         ->send();
-        return redirect('shipment/dash');
+        return redirect('/');
     }
 }
 

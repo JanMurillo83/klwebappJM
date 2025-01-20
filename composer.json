@@ -17,6 +17,7 @@
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.9",
         "livewire/livewire": "^3.0",
+        "owenvoke/blade-fontawesome": "^2.8",
         "spatie/laravel-activitylog": "^4.8",
         "spatie/laravel-permission": "^6.7"
     },

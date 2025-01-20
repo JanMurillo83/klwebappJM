@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Shipment;
 
+use App\Livewire\ServicesOverview;
 use Filament\Tables;
 use App\Models\Service;
 use Livewire\Component;
@@ -23,7 +24,6 @@ class ListShipments extends Component implements HasForms, HasTable
 {
     use InteractsWithForms;
     use InteractsWithTable;
-
     public function table(Table $table): Table
     {
         return $table
@@ -77,7 +77,7 @@ class ListShipments extends Component implements HasForms, HasTable
                 Action::make('Add')
                 ->label('Add New Shipment')
                 ->color(Color::Red)
-                ->url('form')
+                ->url('/shipment/form')
             ])->headerActionsPosition(HeaderActionsPosition::Bottom);
     }
 

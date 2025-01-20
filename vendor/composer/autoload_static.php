@@ -132,6 +132,7 @@ class ComposerStaticInitbfb7ac855449a2e1d9662852791e2ff6
         ),
         'O' => 
         array (
+            'OwenVoke\\BladeFontAwesome\\' => 26,
             'OpenSpout\\' => 10,
         ),
         'N' => 
@@ -463,6 +464,10 @@ class ComposerStaticInitbfb7ac855449a2e1d9662852791e2ff6
         array (
             0 => __DIR__ . '/..' . '/paragonie/constant_time_encoding/src',
         ),
+        'OwenVoke\\BladeFontAwesome\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/owenvoke/blade-fontawesome/src',
+        ),
         'OpenSpout\\' => 
         array (
             0 => __DIR__ . '/..' . '/openspout/openspout/src',
@@ -747,7 +752,9 @@ class ComposerStaticInitbfb7ac855449a2e1d9662852791e2ff6
         'App\\Livewire\\DirectoryList' => __DIR__ . '/../..' . '/app/Livewire/DirectoryList.php',
         'App\\Livewire\\ExchangeRateModal' => __DIR__ . '/../..' . '/app/Livewire/ExchangeRateModal.php',
         'App\\Livewire\\ServiceForm' => __DIR__ . '/../..' . '/app/Livewire/ServiceForm.php',
+        'App\\Livewire\\ServicesOverview' => __DIR__ . '/../..' . '/app/Livewire/ServicesOverview.php',
         'App\\Livewire\\Shipment\\CreateShipment' => __DIR__ . '/../..' . '/app/Livewire/Shipment/CreateShipment.php',
+        'App\\Livewire\\Shipment\\ListShipments' => __DIR__ . '/../..' . '/app/Livewire/Shipment/ListShipments.php',
         'App\\Livewire\\ShipperConsigneeSection' => __DIR__ . '/../..' . '/app/Livewire/ShipperConsigneeSection.php',
         'App\\Livewire\\SidePanel' => __DIR__ . '/../..' . '/app/Livewire/SidePanel.php',
         'App\\Livewire\\UsersList' => __DIR__ . '/../..' . '/app/Livewire/UsersList.php',
@@ -5922,6 +5929,9 @@ class ComposerStaticInitbfb7ac855449a2e1d9662852791e2ff6
         'OpenSpout\\Writer\\XLSX\\Properties' => __DIR__ . '/..' . '/openspout/openspout/src/Writer/XLSX/Properties.php',
         'OpenSpout\\Writer\\XLSX\\Writer' => __DIR__ . '/..' . '/openspout/openspout/src/Writer/XLSX/Writer.php',
         'Override' => __DIR__ . '/..' . '/symfony/polyfill-php83/Resources/stubs/Override.php',
+        'OwenVoke\\BladeFontAwesome\\Actions\\CompileSvgsAction' => __DIR__ . '/..' . '/owenvoke/blade-fontawesome/src/Actions/CompileSvgsAction.php',
+        'OwenVoke\\BladeFontAwesome\\BladeFontAwesomeServiceProvider' => __DIR__ . '/..' . '/owenvoke/blade-fontawesome/src/BladeFontAwesomeServiceProvider.php',
+        'OwenVoke\\BladeFontAwesome\\Commands\\SyncIconsCommand' => __DIR__ . '/..' . '/owenvoke/blade-fontawesome/src/Commands/SyncIconsCommand.php',
         'PHPUnit\\Event\\Application\\Finished' => __DIR__ . '/..' . '/phpunit/phpunit/src/Event/Events/Application/Finished.php',
         'PHPUnit\\Event\\Application\\FinishedSubscriber' => __DIR__ . '/..' . '/phpunit/phpunit/src/Event/Events/Application/FinishedSubscriber.php',
         'PHPUnit\\Event\\Application\\Started' => __DIR__ . '/..' . '/phpunit/phpunit/src/Event/Events/Application/Started.php',

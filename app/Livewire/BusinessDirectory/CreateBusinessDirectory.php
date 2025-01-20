@@ -225,10 +225,20 @@ class CreateBusinessDirectory extends Component implements HasForms
                     ->schema([
                         Group::make()->schema([
                             Forms\Components\TextInput::make('billing_reference')
-                                ->label('Billing Reference')->required(function (Get $get){
+                                ->label('B.Reference')->required(function (Get $get){
                                     if($get('type') == 'customer') return true;
                                     else return false;
-                                })->columnSpan(2)->disabled(function (Get $get){
+                                })->disabled(function (Get $get){
+                                    if($get('type') == 'customer') return false;
+                                    else return true;
+                                }),
+                            Forms\Components\TextInput::make('custom_start_number')
+                                ->label('B.Start Number')
+                                ->numeric()
+                                ->required(function (Get $get){
+                                    if($get('type') == 'customer') return true;
+                                    else return false;
+                                })->disabled(function (Get $get){
                                     if($get('type') == 'customer') return false;
                                     else return true;
                                 }),
@@ -344,6 +354,7 @@ class CreateBusinessDirectory extends Component implements HasForms
                                 $graba = $data;
                                 unset($graba['action'],$graba['MC Number'],$graba['USDOT'],$graba['SCAC'],$graba['CAAT'],$graba['sup_services'],$graba['contacts'],$graba['equipment']);
                                 BusinessDirectory::where('id',$data['id'])->update($graba);
+                               $recid = $data['id'];
                                 if($data['type'] == 'supplier')
                                 {
                                     $recid = $data['id'];

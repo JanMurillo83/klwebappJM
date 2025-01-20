@@ -22,14 +22,14 @@ Route::middleware([
     'verified',
 ])->group(function () {
     // Ruta para el dashboard
-    Route::get('/', function () {
-        return view('/dashboard');
-    })->name('dashboard');
+    /*Route::get('/', function () {
+       return view('/dashboard');
+   })->name('home');
 
     Route::get('/dashboard', function () {
-        return view('/dashboard');
-    })->name('dashboard.page');
-
+         return view('/dashboard');
+     })->name('dashboard.page');*/
+    Route::get('/', App\Livewire\Shipment\ListShipments::class)->name('dashboard');
 
     // Ruta para reports
     Route::get('/reports', function () {

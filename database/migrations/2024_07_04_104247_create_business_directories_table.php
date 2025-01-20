@@ -29,6 +29,7 @@ return new class extends Migration
             $table->string('website', 255)->nullable(); // Sitio web
             $table->string('email', 255); // Correo electrónico
             $table->string('billing_reference')->nullable();
+            $table->integer('custom_start_number')->default(0);
             $table->integer('credit_days')->nullable(); // Días de crédito
             $table->date('credit_expiration_date')->nullable(); // Fecha de expiración del crédito
             $table->integer('free_loading_unloading_hours')->nullable(); // Horas de carga y descarga gratuita
