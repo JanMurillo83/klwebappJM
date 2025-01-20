@@ -70,8 +70,10 @@ class CreateShipment extends Component implements HasForms
         return $form
             ->schema([
                 Hidden::make('exchange_rate_id')
-                    ->default(function(){
-                        return ExchangeRate::latest()->first()->id;
+                    ->default(function(Set $set){
+                        $ex_rat = ExchangeRate::latest()->first();
+                        $set('rate_to_customer',$ex_rat->exchange_rate ?? 0);
+                        return $ex_rat->id;
                     }),
                 Hidden::make('user_id')
                    ->default(function(){
@@ -88,7 +90,16 @@ class CreateShipment extends Component implements HasForms
                                     ->label('Customer')
                                     ->required()
                                     ->options(BusinessDirectory::where('type','customer')->pluck('company','id'))
-                                    ->columnSpan(4),
+                                    ->columnSpan(4)
+                                    ->afterStateUpdated(function (Get $get,Set $set) {
+                                        $cust = $get('business_directory_id');
+                                        $bilref = BusinessDirectory::where('id',$cust)->first();
+                                        $serv = count(Service::where('business_directory_id',$get('business_directory_id'))->get()) + 1;
+                                        $kl = 'KL'.$bilref->billing_reference.$serv;
+                                        $set('billing_customer_reference',$kl);
+                                        $ex_rat = ExchangeRate::latest()->first();
+                                        $set('rate_to_customer',$ex_rat->exchange_rate ?? 0);
+                                    }),
                                     TextInput::make('rate_to_customer')
                                     ->label('Rate C.')
                                     ->live()
@@ -100,7 +111,7 @@ class CreateShipment extends Component implements HasForms
                                     ->options(['MXN'=>'MXN','USD'=>'USD'])->columnSpan(3),
                                     TextInput::make('billing_customer_reference')
                                     ->label('Billing C. Ref.')
-                                    ->maxLength(7)->columnSpan(4),
+                                    ->maxLength(7)->columnSpan(4)->readOnly(),
                                     TextInput::make('pickup_number')
                                     ->label('Pickup No.')
                                     ->maxLength(255)->columnSpan(2),
@@ -916,13 +927,13 @@ class CreateShipment extends Component implements HasForms
 
     public static function grabar($data)
     {
-        dd($data);
+        //dd($data);
         DB::statement('SET FOREIGN_KEY_CHECKS=0');
         $subserv = '';
-        if($data['SubServ1'] == true) $subserv = 'Domestic USA';
-        if($data['SubServ2'] == true) $subserv = 'Domestic MX';
-        if($data['SubServ3'] == true) $subserv = 'Door to Door Import';
-        if($data['SubServ4'] == true) $subserv = 'Door to Door Export';
+        if(isset($data['SubServ1'])&&$data['SubServ1'] == true) $subserv = 'Domestic USA';
+        if(isset($data['SubServ2'])&&$data['SubServ2'] == true) $subserv = 'Domestic MX';
+        if(isset($data['SubServ3'])&&$data['SubServ3'] == true) $subserv = 'Door to Door Import';
+        if(isset($data['SubServ4'])&&$data['SubServ4'] == true) $subserv = 'Door to Door Export';
         $servid = DB::table('services')->insertGetId([
             'exchange_rate_id'=>$data['exchange_rate_id'],
             'user_id'=>$data['user_id'],
@@ -957,7 +968,7 @@ class CreateShipment extends Component implements HasForms
         ]);
         DB::table('consignees')->insert([
             'service_id'=>$servid,
-            'delivery_date_requested'=>$data['requested_pickup_date2'],
+            'delivery_date_requested'=>$data['requested_pickup_date_2'],
             'delivery_time_requested'=>$data['time_2'],
             'created_at'=>Carbon\Carbon::now()
         ]);
@@ -1043,7 +1054,7 @@ class CreateShipment extends Component implements HasForms
                 'modality_id'=>$moda
             ]);
         }
-        if($data['SubServ1'] == true)
+        if(isset($data['subServ1'])&&$data['SubServ1'] == true)
         {
             if($data['SubSubServ1']==true)
             {
@@ -1098,7 +1109,7 @@ class CreateShipment extends Component implements HasForms
                 foreach ($data['uscar_charges'] as $data)
                 {
                     DB::table('charges')->insert([
-                        'carrier_id'=>$carr,
+                        'carrier_id'=>$carrier,
                         'charge_type_id'=>$data['uscar_charge_type'],
                         'description'=>$data['uscar_charge_descr'],
                         'cost'=>$data['uscar_charge_cost'],
@@ -1137,7 +1148,7 @@ class CreateShipment extends Component implements HasForms
                 foreach ($data['usbrok_charges'] as $data)
                 {
                     DB::table('charges')->insert([
-                        'carrier_id'=>$carr,
+                        'carrier_id'=>$carrier,
                         'charge_type_id'=>$data['usbrok_charge_type'],
                         'description'=>$data['usbrok_charge_descr'],
                         'cost'=>$data['usbrokr_charge_cost'],
@@ -1174,7 +1185,7 @@ class CreateShipment extends Component implements HasForms
                 foreach ($data['mane_charges'] as $data)
                 {
                     DB::table('charges')->insert([
-                        'carrier_id'=>$carr,
+                        'carrier_id'=>$carrier,
                         'charge_type_id'=>$data['mane_charge_type'],
                         'description'=>$data['mane_charge_descr'],
                         'cost'=>$data['mane_charge_cost'],
@@ -1186,7 +1197,7 @@ class CreateShipment extends Component implements HasForms
                 }
             }
         }
-        if($data['SubServ2'] == true)
+        if(isset($data['subServ2'])&&$data['SubServ2'] == true)
         {
             if($data['SubSubServ3']==true)
             {
@@ -1234,7 +1245,7 @@ class CreateShipment extends Component implements HasForms
                 foreach ($data['trans_charges'] as $data)
                 {
                     DB::table('charges')->insert([
-                        'carrier_id'=>$carr,
+                        'carrier_id'=>$carrier,
                         'charge_type_id'=>$data['trans_charge_type'],
                         'description'=>$data['trans_charge_descr'],
                         'cost'=>$data['trans_charge_cost'],
@@ -1297,7 +1308,7 @@ class CreateShipment extends Component implements HasForms
                 ]);
                 foreach ($data['mxcar_charges'] as $data) {
                     DB::table('charges')->insert([
-                        'carrier_id' => $carr,
+                        'carrier_id' => $carrier,
                         'charge_type_id' => $data['mxcar_charge_type'],
                         'description' => $data['mxcar_charge_descr'],
                         'cost' => $data['mxcar_charge_cost'],
@@ -1309,7 +1320,7 @@ class CreateShipment extends Component implements HasForms
                 }
             }
         }
-        if($data['SubServ3'] == true)
+        if(isset($data['subServ3'])&&$data['SubServ3'] == true)
         {
             if($data['SubSubServ1']==true)
             {
@@ -1364,7 +1375,7 @@ class CreateShipment extends Component implements HasForms
                 foreach ($data['uscar_charges'] as $data)
                 {
                     DB::table('charges')->insert([
-                        'carrier_id'=>$carr,
+                        'carrier_id'=>$carrier,
                         'charge_type_id'=>$data['uscar_charge_type'],
                         'description'=>$data['uscar_charge_descr'],
                         'cost'=>$data['uscar_charge_cost'],
@@ -1403,7 +1414,7 @@ class CreateShipment extends Component implements HasForms
                 foreach ($data['usbrok_charges'] as $data)
                 {
                     DB::table('charges')->insert([
-                        'carrier_id'=>$carr,
+                        'carrier_id'=>$carrier,
                         'charge_type_id'=>$data['usbrok_charge_type'],
                         'description'=>$data['usbrok_charge_descr'],
                         'cost'=>$data['usbrokr_charge_cost'],
@@ -1460,7 +1471,7 @@ class CreateShipment extends Component implements HasForms
                 foreach ($data['trans_charges'] as $data)
                 {
                     DB::table('charges')->insert([
-                        'carrier_id'=>$carr,
+                        'carrier_id'=>$carrier,
                         'charge_type_id'=>$data['trans_charge_type'],
                         'description'=>$data['trans_charge_descr'],
                         'cost'=>$data['trans_charge_cost'],
@@ -1497,7 +1508,7 @@ class CreateShipment extends Component implements HasForms
                 foreach ($data['mane_charges'] as $data)
                 {
                     DB::table('charges')->insert([
-                        'carrier_id'=>$carr,
+                        'carrier_id'=>$carrier,
                         'charge_type_id'=>$data['mane_charge_type'],
                         'description'=>$data['mane_charge_descr'],
                         'cost'=>$data['mane_charge_cost'],
@@ -1560,7 +1571,7 @@ class CreateShipment extends Component implements HasForms
                 ]);
                 foreach ($data['mxcar_charges'] as $data) {
                     DB::table('charges')->insert([
-                        'carrier_id' => $carr,
+                        'carrier_id' => $carrier,
                         'charge_type_id' => $data['mxcar_charge_type'],
                         'description' => $data['mxcar_charge_descr'],
                         'cost' => $data['mxcar_charge_cost'],
@@ -1572,7 +1583,7 @@ class CreateShipment extends Component implements HasForms
                 }
             }
         }
-        if($data['SubServ4'] == true)
+        if(isset($data['subServ4'])&&$data['SubServ4'] == true)
         {
             if($data['SubSubServ1']==true)
             {
@@ -1627,7 +1638,7 @@ class CreateShipment extends Component implements HasForms
                 foreach ($data['uscar_charges'] as $data)
                 {
                     DB::table('charges')->insert([
-                        'carrier_id'=>$carr,
+                        'carrier_id'=>$carrier,
                         'charge_type_id'=>$data['uscar_charge_type'],
                         'description'=>$data['uscar_charge_descr'],
                         'cost'=>$data['uscar_charge_cost'],
@@ -1666,7 +1677,7 @@ class CreateShipment extends Component implements HasForms
                 foreach ($data['usbrok_charges'] as $data)
                 {
                     DB::table('charges')->insert([
-                        'carrier_id'=>$carr,
+                        'carrier_id'=>$carrier,
                         'charge_type_id'=>$data['usbrok_charge_type'],
                         'description'=>$data['usbrok_charge_descr'],
                         'cost'=>$data['usbrokr_charge_cost'],
@@ -1723,7 +1734,7 @@ class CreateShipment extends Component implements HasForms
                 foreach ($data['trans_charges'] as $data)
                 {
                     DB::table('charges')->insert([
-                        'carrier_id'=>$carr,
+                        'carrier_id'=>$carrier,
                         'charge_type_id'=>$data['trans_charge_type'],
                         'description'=>$data['trans_charge_descr'],
                         'cost'=>$data['trans_charge_cost'],
@@ -1760,7 +1771,7 @@ class CreateShipment extends Component implements HasForms
                 foreach ($data['mane_charges'] as $data)
                 {
                     DB::table('charges')->insert([
-                        'carrier_id'=>$carr,
+                        'carrier_id'=>$carrier,
                         'charge_type_id'=>$data['mane_charge_type'],
                         'description'=>$data['mane_charge_descr'],
                         'cost'=>$data['mane_charge_cost'],
@@ -1823,7 +1834,7 @@ class CreateShipment extends Component implements HasForms
                 ]);
                 foreach ($data['mxcar_charges'] as $data) {
                     DB::table('charges')->insert([
-                        'carrier_id' => $carr,
+                        'carrier_id' => $carrier,
                         'charge_type_id' => $data['mxcar_charge_type'],
                         'description' => $data['mxcar_charge_descr'],
                         'cost' => $data['mxcar_charge_cost'],
@@ -1840,8 +1851,8 @@ class CreateShipment extends Component implements HasForms
         ->title('Saved')
         ->success()
         ->persistent()
-        ->url('dash')
         ->send();
+        return redirect('shipment/dash');
     }
 }
 
