@@ -128,7 +128,9 @@ class CreateShipment extends Component implements HasForms
                                     ->label('Select new shipment type')
                                     ->required()->options(ServiceDetail::all()->pluck('name','id'))->columnSpan(5),
                                     Checkbox::make('expedited')
-                                    ->label('Expedited')->columnSpan(2),
+                                    ->label('Expedited')
+                                        ->columnSpan(2)
+                                        ->hiddenLabel(),
                                     Checkbox::make('hazmat')
                                     ->label('Hazmat')->columnSpan(2),
                                     Checkbox::make('team_driver')

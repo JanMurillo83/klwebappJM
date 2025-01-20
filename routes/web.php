@@ -24,12 +24,12 @@ Route::middleware([
     // Ruta para el dashboard
     /*Route::get('/', function () {
        return view('/dashboard');
-   })->name('home');
-
-    Route::get('/dashboard', function () {
+   })->name('dashboard');*/
+    Route::get('/',[\App\Http\Controllers\FunctionsController::class, 'index'])->name('dashboard');
+    /*Route::get('/dashboard', function () {
          return view('/dashboard');
      })->name('dashboard.page');*/
-    Route::get('/', App\Livewire\Shipment\ListShipments::class)->name('dashboard');
+    Route::get('/dashboard', App\Livewire\Shipment\ListShipments::class)->name('dashboard.page');
 
     // Ruta para reports
     Route::get('/reports', function () {

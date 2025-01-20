@@ -3,6 +3,8 @@
 namespace App\Livewire\Shipment;
 
 use App\Livewire\ServicesOverview;
+use Carbon\Carbon;
+use Filament\Forms\Components\Select;
 use Filament\Tables;
 use App\Models\Service;
 use Livewire\Component;
@@ -73,7 +75,25 @@ class ListShipments extends Component implements HasForms, HasTable
                     ->searchable()
                     ->dateTime('d-m-Y')
                     ->sortable()
-            ])->headerActions([
+            ])
+            ->actions([
+                Action::make('change')->label('Change Status')
+                ->color(Color::Red)
+                ->icon('fas-eye')
+                    ->form([
+                        Select::make('shipment_status')
+                            ->label('Shipment Status')
+                            ->options(ShipmentStatus::all()->pluck('name','id'))->columnSpan(4),
+                    ])
+                ->action(function ($record,$data){
+                    $record->update([
+                        'shipment_status'=>$data['shipment_status'],
+                        'updated_at'=>Carbon::now()
+                    ]);
+                })
+            ])
+            ->actionsPosition(Tables\Enums\ActionsPosition::AfterColumns)
+            ->headerActions([
                 Action::make('Add')
                 ->label('Add New Shipment')
                 ->color(Color::Red)
