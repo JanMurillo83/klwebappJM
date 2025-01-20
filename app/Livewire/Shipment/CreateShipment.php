@@ -1148,7 +1148,7 @@ class CreateShipment extends Component implements HasForms
                 foreach ($data['usbrok_charges'] as $data)
                 {
                     DB::table('charges')->insert([
-                        'carrier_id'=>$carr,
+                        'carrier_id'=>$carrier,
                         'charge_type_id'=>$data['usbrok_charge_type'],
                         'description'=>$data['usbrok_charge_descr'],
                         'cost'=>$data['usbrokr_charge_cost'],
@@ -1185,7 +1185,7 @@ class CreateShipment extends Component implements HasForms
                 foreach ($data['mane_charges'] as $data)
                 {
                     DB::table('charges')->insert([
-                        'carrier_id'=>$carr,
+                        'carrier_id'=>$carrier,
                         'charge_type_id'=>$data['mane_charge_type'],
                         'description'=>$data['mane_charge_descr'],
                         'cost'=>$data['mane_charge_cost'],
@@ -1245,7 +1245,7 @@ class CreateShipment extends Component implements HasForms
                 foreach ($data['trans_charges'] as $data)
                 {
                     DB::table('charges')->insert([
-                        'carrier_id'=>$carr,
+                        'carrier_id'=>$carrier,
                         'charge_type_id'=>$data['trans_charge_type'],
                         'description'=>$data['trans_charge_descr'],
                         'cost'=>$data['trans_charge_cost'],
@@ -1308,7 +1308,7 @@ class CreateShipment extends Component implements HasForms
                 ]);
                 foreach ($data['mxcar_charges'] as $data) {
                     DB::table('charges')->insert([
-                        'carrier_id' => $carr,
+                        'carrier_id' => $carrier,
                         'charge_type_id' => $data['mxcar_charge_type'],
                         'description' => $data['mxcar_charge_descr'],
                         'cost' => $data['mxcar_charge_cost'],
@@ -1375,7 +1375,7 @@ class CreateShipment extends Component implements HasForms
                 foreach ($data['uscar_charges'] as $data)
                 {
                     DB::table('charges')->insert([
-                        'carrier_id'=>$carr,
+                        'carrier_id'=>$carrier,
                         'charge_type_id'=>$data['uscar_charge_type'],
                         'description'=>$data['uscar_charge_descr'],
                         'cost'=>$data['uscar_charge_cost'],
@@ -1414,7 +1414,7 @@ class CreateShipment extends Component implements HasForms
                 foreach ($data['usbrok_charges'] as $data)
                 {
                     DB::table('charges')->insert([
-                        'carrier_id'=>$carr,
+                        'carrier_id'=>$carrier,
                         'charge_type_id'=>$data['usbrok_charge_type'],
                         'description'=>$data['usbrok_charge_descr'],
                         'cost'=>$data['usbrokr_charge_cost'],
@@ -1471,7 +1471,7 @@ class CreateShipment extends Component implements HasForms
                 foreach ($data['trans_charges'] as $data)
                 {
                     DB::table('charges')->insert([
-                        'carrier_id'=>$carr,
+                        'carrier_id'=>$carrier,
                         'charge_type_id'=>$data['trans_charge_type'],
                         'description'=>$data['trans_charge_descr'],
                         'cost'=>$data['trans_charge_cost'],
@@ -1508,7 +1508,7 @@ class CreateShipment extends Component implements HasForms
                 foreach ($data['mane_charges'] as $data)
                 {
                     DB::table('charges')->insert([
-                        'carrier_id'=>$carr,
+                        'carrier_id'=>$carrier,
                         'charge_type_id'=>$data['mane_charge_type'],
                         'description'=>$data['mane_charge_descr'],
                         'cost'=>$data['mane_charge_cost'],
@@ -1571,7 +1571,7 @@ class CreateShipment extends Component implements HasForms
                 ]);
                 foreach ($data['mxcar_charges'] as $data) {
                     DB::table('charges')->insert([
-                        'carrier_id' => $carr,
+                        'carrier_id' => $carrier,
                         'charge_type_id' => $data['mxcar_charge_type'],
                         'description' => $data['mxcar_charge_descr'],
                         'cost' => $data['mxcar_charge_cost'],
@@ -1638,7 +1638,7 @@ class CreateShipment extends Component implements HasForms
                 foreach ($data['uscar_charges'] as $data)
                 {
                     DB::table('charges')->insert([
-                        'carrier_id'=>$carr,
+                        'carrier_id'=>$carrier,
                         'charge_type_id'=>$data['uscar_charge_type'],
                         'description'=>$data['uscar_charge_descr'],
                         'cost'=>$data['uscar_charge_cost'],
@@ -1677,7 +1677,7 @@ class CreateShipment extends Component implements HasForms
                 foreach ($data['usbrok_charges'] as $data)
                 {
                     DB::table('charges')->insert([
-                        'carrier_id'=>$carr,
+                        'carrier_id'=>$carrier,
                         'charge_type_id'=>$data['usbrok_charge_type'],
                         'description'=>$data['usbrok_charge_descr'],
                         'cost'=>$data['usbrokr_charge_cost'],
@@ -1734,7 +1734,7 @@ class CreateShipment extends Component implements HasForms
                 foreach ($data['trans_charges'] as $data)
                 {
                     DB::table('charges')->insert([
-                        'carrier_id'=>$carr,
+                        'carrier_id'=>$carrier,
                         'charge_type_id'=>$data['trans_charge_type'],
                         'description'=>$data['trans_charge_descr'],
                         'cost'=>$data['trans_charge_cost'],
@@ -1771,7 +1771,7 @@ class CreateShipment extends Component implements HasForms
                 foreach ($data['mane_charges'] as $data)
                 {
                     DB::table('charges')->insert([
-                        'carrier_id'=>$carr,
+                        'carrier_id'=>$carrier,
                         'charge_type_id'=>$data['mane_charge_type'],
                         'description'=>$data['mane_charge_descr'],
                         'cost'=>$data['mane_charge_cost'],
@@ -1834,7 +1834,7 @@ class CreateShipment extends Component implements HasForms
                 ]);
                 foreach ($data['mxcar_charges'] as $data) {
                     DB::table('charges')->insert([
-                        'carrier_id' => $carr,
+                        'carrier_id' => $carrier,
                         'charge_type_id' => $data['mxcar_charge_type'],
                         'description' => $data['mxcar_charge_descr'],
                         'cost' => $data['mxcar_charge_cost'],
